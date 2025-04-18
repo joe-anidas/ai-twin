@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '@/app/dashboard/[address]/Dashboard.module.css';
+import { type Address } from 'viem';
 
 interface CloneMetadata {
   modelName?: string;
@@ -11,7 +12,12 @@ interface CloneMetadata {
   textSample?: string;
 }
 
-export default function CloneCard({ clone }: { clone: { tokenId: bigint; metadata: string } }) {
+interface CloneCardProps {
+  clone: { tokenId: bigint; metadata: string };
+  contractAddress?: Address;
+}
+
+export default function CloneCard({ clone, contractAddress }: CloneCardProps) {
   const router = useRouter();
   const [cloneData, setCloneData] = useState<CloneMetadata | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,6 +68,12 @@ export default function CloneCard({ clone }: { clone: { tokenId: bigint; metadat
     }
   };
 
+  const handleViewInExplorer = () => {
+    if (!contractAddress) return;
+    const explorerUrl = `https://sepolia.basescan.org/nft/${contractAddress}/${clone.tokenId.toString()}`;
+    window.open(explorerUrl, '_blank');
+  };
+
   return (
     <div className={styles.card}>
       {isLoading ? (
@@ -83,16 +95,27 @@ export default function CloneCard({ clone }: { clone: { tokenId: bigint; metadat
               <p>Created: {new Date(cloneData.timestamp).toLocaleDateString()}</p>
             )}
           </div>
+          
+          <div className={styles.buttonGroup}>
+            <button
+              onClick={handleChatClick}
+              className={styles.primaryButton}
+              disabled={isLoading || error !== null || !cloneData}
+            >
+              {isLoading ? 'Loading...' : 'Chat with Model'}
+            </button>
+            
+            <button
+              onClick={handleViewInExplorer}
+              className={styles.secondaryButton}
+              disabled={!contractAddress}
+              title={!contractAddress ? "Contract address not available" : "View on BaseScan"}
+            >
+              View in Explorer
+            </button>
+          </div>
         </>
       )}
-      
-      <button
-        onClick={handleChatClick}
-        className={styles.linkButton}
-        disabled={isLoading || error !== null || !cloneData}
-      >
-        {isLoading ? 'Loading...' : 'Chat with Model'}
-      </button>
     </div>
   );
 }

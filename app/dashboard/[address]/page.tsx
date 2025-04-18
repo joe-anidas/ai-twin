@@ -99,7 +99,10 @@ export default function Dashboard() {
           onMint={handleMint}
         />
         
-        <NFTsSection nftClones={nftClones} />
+        <NFTsSection 
+            nftClones={nftClones}
+            contractAddress={contractAddress} // Add this line
+          />
       </main>
     </div>
   );
