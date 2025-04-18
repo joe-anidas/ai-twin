@@ -1,3 +1,4 @@
+// components/Dashboard.tsx
 "use client";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -11,12 +12,14 @@ import styles from './Dashboard.module.css';
 export default function Dashboard() {
   const { address } = useParams();
   const router = useRouter();
-  const { account, mintCloneNFT, isCorrectNetwork, currentChainId } = useContract();
+  const { account, mintCloneNFT, isCorrectNetwork, getOwnedClones } = useContract();
   const { switchChain } = useSwitchChain();
 
   const [showForm, setShowForm] = useState(false);
   const [ipfsHash, setIpfsHash] = useState("");
   const [mintingInProgress, setMintingInProgress] = useState(false);
+  const [localModels, setLocalModels] = useState<string[]>([]);
+  const [nftClones, setNftClones] = useState<Array<{ tokenId: bigint; metadata: string }>>([]);
 
   useEffect(() => {
     if (!account?.address || account.address.toLowerCase() !== (address as string).toLowerCase()) {
@@ -24,39 +27,51 @@ export default function Dashboard() {
     }
   }, [account?.address, address, router]);
 
-  const handleMintClone = async () => {
-    if (!ipfsHash.trim()) {
-      alert("Please create an AI Twin before minting");
-      return;
-    }
+  useEffect(() => {
+    const loadData = async () => {
+      const saved = localStorage.getItem(`aiModels-${address}`);
+      setLocalModels(saved ? JSON.parse(saved) : []);
+      if (account?.address) setNftClones(await getOwnedClones());
+    };
+    loadData();
+  }, [account?.address, address, getOwnedClones]);
 
-    if (!isCorrectNetwork) {
-      alert("Please switch to Base Sepolia before minting.");
-      return;
-    }
-
+  const handleMint = async () => {
+    if (!ipfsHash) return;
+    
     try {
       setMintingInProgress(true);
-      const txHash = await mintCloneNFT(ipfsHash);
-      alert(`✅ NFT Minted Successfully!\nTransaction Hash: ${txHash}`);
+      await mintCloneNFT(ipfsHash);
+      setNftClones(await getOwnedClones());
+      setLocalModels(prev => prev.filter(hash => hash !== ipfsHash));
       setIpfsHash("");
     } catch (error) {
-      console.error("Minting error:", error);
-      alert(`❌ Minting failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+      console.error("Minting failed:", error);
     } finally {
       setMintingInProgress(false);
     }
+  };
+
+  const handleUpload = (hash: string) => {
+    setIpfsHash(hash);
+    setLocalModels(prev => {
+      const updated = [...prev, hash];
+      localStorage.setItem(`aiModels-${address}`, JSON.stringify(updated));
+      return updated;
+    });
   };
 
   if (!isCorrectNetwork) {
     return (
       <div className={styles.alertBox}>
         <h2>Network Mismatch</h2>
-        <p>Required: Base Sepolia (ID: {baseSepolia.id})<br />Current: {currentChainId || "Not connected"}</p>
-        <button onClick={() => switchChain({ chainId: baseSepolia.id })} className={styles.button}>
-          Switch to Base Sepolia
+        <p>Please switch to Base Sepolia to continue</p>
+        <button 
+          onClick={() => switchChain({ chainId: baseSepolia.id })} 
+          className={styles.primaryButton}
+        >
+          Switch Network
         </button>
-        <p className={styles.infoText}>Ensure your wallet supports Base Sepolia</p>
       </div>
     );
   }
@@ -64,39 +79,81 @@ export default function Dashboard() {
   return (
     <div className={styles.dashboardContainer}>
       <Navbar />
-      <h1 className={styles.dashboardHeader}>Dashboard for {address}</h1>
-
-      {!showForm ? (
-        <button onClick={() => setShowForm(true)} className={styles.button}>
-          Create AI Twin
-        </button>
-      ) : (
-        <div>
-          <CreateAITwinForm address={address as string} onUpload={setIpfsHash} />
-          {ipfsHash && (
-            <p className={styles.metadataLink}>
-              AI Twin Metadata: {" "}
-              <a href={ipfsHash} target="_blank" rel="noopener noreferrer">
-                {ipfsHash}
-              </a>
-            </p>
+      
+      <main className={styles.mainContent}>
+        <h1 className={styles.title}>AI Twin Dashboard</h1>
+        
+        <section className={styles.creationSection}>
+          {!showForm ? (
+            <button 
+              onClick={() => setShowForm(true)}
+              className={styles.primaryButton}
+            >
+              + Create New AI Twin
+            </button>
+          ) : (
+            <div className={styles.formWrapper}>
+              <CreateAITwinForm 
+                address={address as string} 
+                onUpload={handleUpload} 
+                onCancel={() => setShowForm(false)}
+              />
+              {ipfsHash && (
+                <div className={styles.mintSection}>
+                  <button
+                    onClick={handleMint}
+                    disabled={mintingInProgress}
+                    className={styles.mintButton}
+                  >
+                    {mintingInProgress ? "Minting..." : "Mint as NFT"}
+                  </button>
+                  <p className={styles.ipfsHash}>IPFS Hash: {ipfsHash}</p>
+                </div>
+              )}
+            </div>
           )}
-          <button
-            onClick={handleMintClone}
-            disabled={mintingInProgress || !ipfsHash}
-            className={styles.button}
-          >
-            {mintingInProgress ? "⏳ Minting..." : "🖼️ Mint AI Twin NFT"}
-          </button>
-        </div>
-      )}
+        </section>
 
-      {account?.address && (
-        <div className={styles.walletInfo}>
-          <p>Connected Wallet: <span>{account.address}</span></p>
-          <p>Network: Base Sepolia (ID: {baseSepolia.id})</p>
-        </div>
-      )}
+        <section className={styles.modelsSection}>
+          <h2>Your AI Models</h2>
+          <div className={styles.grid}>
+            {localModels.map((model, index) => (
+              <div key={index} className={styles.card}>
+                <h3>Model #{index + 1}</h3>
+                <a 
+                  href={model} 
+                  target="_blank" 
+                  rel="noopener" 
+                  className={styles.link}
+                >
+                  View Metadata
+                </a>
+              </div>
+            ))}
+            {localModels.length === 0 && <p>No unminted models found</p>}
+          </div>
+        </section>
+
+        <section className={styles.nftsSection}>
+          <h2>Your NFT Clones</h2>
+          <div className={styles.grid}>
+            {nftClones.map((clone) => (
+              <div key={clone.tokenId.toString()} className={styles.card}>
+                <h3>Clone #{clone.tokenId.toString()}</h3>
+                <a
+                  href={clone.metadata}
+                  target="_blank"
+                  rel="noopener"
+                  className={styles.link}
+                >
+                  View Metadata
+                </a>
+              </div>
+            ))}
+            {nftClones.length === 0 && <p>No NFT clones minted yet</p>}
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

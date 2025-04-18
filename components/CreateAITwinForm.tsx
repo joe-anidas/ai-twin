@@ -1,14 +1,14 @@
-"use client";
-
+// components/CreateAITwinForm.tsx
 import { useState } from "react";
 import { uploadFileToIPFS, uploadJSONToIPFS } from "@/utils/ipfs";
 
 interface Props {
   address: string;
   onUpload: (ipfsUrl: string) => void;
+  onCancel: () => void; // Add this line to accept the onCancel prop
 }
 
-export default function CreateAITwinForm({ address, onUpload }: Props) {
+export default function CreateAITwinForm({ address, onUpload, onCancel }: Props) {
   const [text, setText] = useState("");
   const [role, setRole] = useState("Mentor");
   const [visibility, setVisibility] = useState("Public");
@@ -92,6 +92,13 @@ export default function CreateAITwinForm({ address, onUpload }: Props) {
         disabled={loading} // Disable button while loading
       >
         {loading ? "Creating AI Twin..." : "Create AI Twin"}
+      </button>
+
+      <button
+        onClick={onCancel} // Calls onCancel when the user clicks the cancel button
+        style={{ display: "block", marginTop: "10px", backgroundColor: "gray" }}
+      >
+        Cancel
       </button>
     </div>
   );

@@ -1,10 +1,10 @@
 const hre = require("hardhat");
 
 async function main() {
-  const monadVerifierAddress = "0x16a4B85001795F7aD3dA8c1157A24d895998521e";
+  // const monadVerifierAddress = "0x16a4B85001795F7aD3dA8c1157A24d895998521e";
 
   const CloneNFT = await hre.ethers.getContractFactory("CloneNFT");
-  const cloneNFT = await CloneNFT.deploy(monadVerifierAddress);
+  const cloneNFT = await CloneNFT.deploy();
 
   await cloneNFT.waitForDeployment();
 
