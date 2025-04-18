@@ -5,9 +5,9 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { useAccount, useConnect, useDisconnect, usePublicClient, useSwitchChain, useWalletClient } from "wagmi";
 import { baseSepolia } from "viem/chains";
 import CloneNFTAbi from "../artifacts/contracts/CloneNFT.sol/CloneNFT.json";
-import { Hex, createWalletClient, custom, Chain } from "viem";
+import { Abi, Address, Hex } from "viem";
 
-type CloneData = {
+export type CloneData = {
   tokenId: bigint;
   metadata: string;
 };
@@ -16,14 +16,16 @@ type ContractContextType = {
   connectWallet: () => void;
   disconnectWallet: () => void;
   account?: ReturnType<typeof useAccount>;
-  mintCloneNFT: (metadataURI: string) => Promise<`0x${string}`>;
+  mintCloneNFT: (metadataURI: string) => Promise<Hex>;
   getOwnedClones: () => Promise<CloneData[]>;
   isCorrectNetwork: boolean;
   currentChainId?: number;
+  contractAddress: Address;
 };
 
 const ContractContext = createContext<ContractContextType | null>(null);
-const CONTRACT_ADDRESS = "0xC1494157287e86b2b29006127967a5D8e6773025";
+const CONTRACT_ADDRESS = "0x68B76bdD2d3E285dc76f5FDBD3cf63072561A3A6" as Address;
+const CONTRACT_VERSION = "v2.1";
 
 export const ContractProvider = ({ children }: { children: ReactNode }) => {
   const { connect } = useConnect();
@@ -69,59 +71,82 @@ export const ContractProvider = ({ children }: { children: ReactNode }) => {
   const getOwnedClones = async (): Promise<CloneData[]> => {
     if (!publicClient || !account.address) return [];
   
+    const cacheKey = `clones-${CONTRACT_VERSION}-${account.address}`;
     try {
+      // Check cache with BigInt revival
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        return JSON.parse(cached, (key, value) => {
+          if (key === 'tokenId' && typeof value === 'string') {
+            return BigInt(value);
+          }
+          return value;
+        });
+      }
+
+      // Fetch fresh data
       const balance = await publicClient.readContract({
         address: CONTRACT_ADDRESS,
-        abi: CloneNFTAbi.abi,
+        abi: CloneNFTAbi.abi as Abi,
         functionName: 'balanceOf',
         args: [account.address],
       });
-  
+
       const clones: CloneData[] = [];
       for (let i = 0; i < Number(balance); i++) {
-        const tokenId: bigint = await publicClient.readContract({
+        const tokenId = await publicClient.readContract({
           address: CONTRACT_ADDRESS,
-          abi: CloneNFTAbi.abi,
+          abi: CloneNFTAbi.abi as Abi,
           functionName: 'tokenOfOwnerByIndex',
           args: [account.address, BigInt(i)],
-        }) as bigint;  // Type casting tokenId to bigint
+        }) as bigint;
     
-        // Use tokenURI to get the metadata URI
-        const metadata: string = await publicClient.readContract({
+        const metadata = await publicClient.readContract({
           address: CONTRACT_ADDRESS,
-          abi: CloneNFTAbi.abi,
+          abi: CloneNFTAbi.abi as Abi,
           functionName: 'tokenURI',
           args: [tokenId],
-        }) as string;  // Type casting metadata to string
-  
+        }) as string;
+
         clones.push({ tokenId, metadata });
       }
+
+      // Store with BigInt serialization
+      const serializableClones = clones.map(clone => ({
+        ...clone,
+        tokenId: clone.tokenId.toString()
+      }));
+      localStorage.setItem(cacheKey, JSON.stringify(serializableClones));
+
       return clones;
     } catch (error) {
       console.error("Error fetching clones:", error);
+      localStorage.removeItem(cacheKey);
       return [];
     }
   };
-    
 
-  const mintCloneNFT = async (metadataURI: string): Promise<`0x${string}`> => {
+  const mintCloneNFT = async (metadataURI: string): Promise<Hex> => {
     if (!account.address) throw new Error("Wallet not connected");
     if (!(await verifyNetwork()) && !(await handleSwitchNetwork())) {
       throw new Error("Network switch required");
     }
 
-    if (!walletClient) throw new Error("Wallet client not available");
-    if (!publicClient) {
-      throw new Error("publicClient is not initialized");
-    }     
+    if (!walletClient || !publicClient) {
+      throw new Error("Wallet connection error");
+    }
+
     const { request } = await publicClient.simulateContract({
       address: CONTRACT_ADDRESS,
-      abi: CloneNFTAbi.abi,
+      abi: CloneNFTAbi.abi as Abi,
       functionName: "mintClone",
       args: [account.address, metadataURI],
       account: account.address,
     });
 
+    // Clear relevant caches
+    localStorage.removeItem(`clones-${CONTRACT_VERSION}-${account.address}`);
+    
     return walletClient.writeContract(request);
   };
 
@@ -136,6 +161,7 @@ export const ContractProvider = ({ children }: { children: ReactNode }) => {
       getOwnedClones,
       isCorrectNetwork,
       currentChainId,
+      contractAddress: CONTRACT_ADDRESS,
     }}>
       {children}
     </ContractContext.Provider>

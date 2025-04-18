@@ -7,17 +7,22 @@ import NetworkAlert from "@/components/dashboard/NetworkAlert";
 import CreationSection from "@/components/dashboard/CreationSection";
 import ModelsSection from "@/components/dashboard/ModelsSection";
 import NFTsSection from "@/components/dashboard/NFTsSection";
-import { useContract } from "@/context/ContractContext";
+import { useContract, type CloneData } from "@/context/ContractContext";
 import styles from './Dashboard.module.css';
 
 export default function Dashboard() {
   const { address } = useParams();
   const router = useRouter();
-  // Correct destructuring including mintCloneNFT
-  const { account, mintCloneNFT, isCorrectNetwork, getOwnedClones } = useContract();
-
+  const { 
+    account, 
+    mintCloneNFT, 
+    isCorrectNetwork, 
+    getOwnedClones,
+    contractAddress 
+  } = useContract();
+  
   const [localModels, setLocalModels] = useState<string[]>([]);
-  const [nftClones, setNftClones] = useState<Array<{ tokenId: bigint; metadata: string }>>([]);
+  const [nftClones, setNftClones] = useState<CloneData[]>([]);
   const [mintingInProgress, setMintingInProgress] = useState<string | null>(null);
 
   useEffect(() => {
@@ -28,21 +33,33 @@ export default function Dashboard() {
 
   useEffect(() => {
     const loadData = async () => {
-      const saved = localStorage.getItem(`aiModels-${address}`);
+      const cacheKey = `aiModels-${contractAddress}-${address}`;
+      const saved = localStorage.getItem(cacheKey);
       setLocalModels(saved ? JSON.parse(saved) : []);
-      if (account?.address) setNftClones(await getOwnedClones());
+      
+      if (account?.address) {
+        setNftClones(await getOwnedClones());
+      }
     };
     loadData();
-  }, [account?.address, address, getOwnedClones]);
+  }, [account?.address, address, getOwnedClones, contractAddress]);
 
   const handleMint = async (hash: string) => {
     try {
       setMintingInProgress(hash);
       await mintCloneNFT(hash);
-      setNftClones(await getOwnedClones());
+      
+      // Refresh data after minting
+      const newClones = await getOwnedClones();
+      setNftClones(newClones);
+      
+      // Update local models
       setLocalModels(prev => {
         const updated = prev.filter(h => h !== hash);
-        localStorage.setItem(`aiModels-${address}`, JSON.stringify(updated));
+        localStorage.setItem(
+          `aiModels-${contractAddress}-${address}`, 
+          JSON.stringify(updated)
+        );
         return updated;
       });
     } catch (error) {
@@ -55,7 +72,10 @@ export default function Dashboard() {
   const handleUpload = (hash: string) => {
     setLocalModels(prev => {
       const updated = [...prev, hash];
-      localStorage.setItem(`aiModels-${address}`, JSON.stringify(updated));
+      localStorage.setItem(
+        `aiModels-${contractAddress}-${address}`, 
+        JSON.stringify(updated)
+      );
       return updated;
     });
   };
