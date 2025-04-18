@@ -70,14 +70,14 @@ export default function ModelCard({
         </>
       )}
 
-      <a 
+      {/* <a 
         href={model} 
         target="_blank" 
         rel="noopener" 
         className={styles.link}
       >
         View Full Metadata
-      </a>
+      </a> */}
       
       <button
         onClick={() => onMint(model)}
