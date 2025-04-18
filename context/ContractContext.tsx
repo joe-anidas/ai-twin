@@ -4,7 +4,7 @@ import { cbWalletConnector } from "@/wagmi";
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useAccount, useConnect, useDisconnect, usePublicClient, useSwitchChain, useWalletClient } from "wagmi";
 import { baseSepolia } from "viem/chains";
-import CloneNFTAbi from "../artifacts/contracts/CloneNFT.sol/CloneNFT.json";
+import CloneNFTAbi from "@/artifacts/contracts/CloneNFT.sol/CloneNFT.json";
 import { Abi, Address, Hex } from "viem";
 
 export type CloneData = {
@@ -21,6 +21,7 @@ type ContractContextType = {
   isCorrectNetwork: boolean;
   currentChainId?: number;
   contractAddress: Address;
+  publicClient?: ReturnType<typeof usePublicClient>;
 };
 
 const ContractContext = createContext<ContractContextType | null>(null);
@@ -162,6 +163,7 @@ export const ContractProvider = ({ children }: { children: ReactNode }) => {
       isCorrectNetwork,
       currentChainId,
       contractAddress: CONTRACT_ADDRESS,
+      publicClient,
     }}>
       {children}
     </ContractContext.Provider>
