@@ -1,0 +1,160 @@
+/* Container for the main dashboard */
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+  }
+  
+  /* Navbar styling */
+  .navbar {
+    background-color: #2d3748;
+    padding: 20px 40px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .navbar h1 {
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 600;
+  }
+  
+  /* Header styling */
+  .dashboard-header {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1a202c;
+    margin-bottom: 40px;
+  }
+  
+  /* Form container */
+  .form-container {
+    margin-top: 20px;
+  }
+  
+  /* Form labels and input fields */
+  .form-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: 8px;
+  }
+  
+  .form-input {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 16px;
+    margin-bottom: 20px;
+    transition: border-color 0.3s ease-in-out;
+  }
+  
+  .form-input:focus {
+    border-color: #63b3ed;
+    outline: none;
+  }
+  
+  /* Button styling */
+  .button {
+    display: inline-block;
+    background-color: #3182ce;
+    color: #ffffff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+    text-align: center;
+    width: 100%;
+  }
+  
+  .button:hover {
+    background-color: #2b6cb0;
+  }
+  
+  .button:disabled {
+    background-color: #cbd5e0;
+    cursor: not-allowed;
+  }
+  
+  /* Metadata link and display */
+  .metadata-link {
+    font-size: 14px;
+    color: #3182ce;
+    text-decoration: none;
+    margin-top: 20px;
+  }
+  
+  .metadata-link:hover {
+    text-decoration: underline;
+  }
+  
+  /* Wallet and network info */
+  .wallet-info {
+    padding: 20px;
+    background-color: #f7fafc;
+    border-radius: 8px;
+    margin-top: 30px;
+  }
+  
+  .wallet-info p {
+    font-size: 14px;
+    color: #4a5568;
+  }
+  
+  .wallet-info .wallet-address {
+    font-family: monospace;
+    word-wrap: break-word;
+    color: #2b6cb0;
+  }
+  
+  /* Alert box for network mismatch */
+  .alert-box {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 30px;
+    background-color: #fef2f2;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  .alert-box h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #e53e3e;
+    margin-bottom: 10px;
+  }
+  
+  .alert-box p {
+    color: #4a5568;
+    font-size: 16px;
+    margin-bottom: 20px;
+  }
+  
+  .alert-box button {
+    background-color: #3182ce;
+    color: #ffffff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+  }
+  
+  .alert-box button:hover {
+    background-color: #2b6cb0;
+  }
+  
+  .alert-box .info-text {
+    font-size: 12px;
+    color: #718096;
+    margin-top: 10px;
+  }
+  
