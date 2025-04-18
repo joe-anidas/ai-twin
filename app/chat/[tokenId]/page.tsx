@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import styles from './page.module.css';
 
@@ -9,19 +9,33 @@ interface ChatMetadata {
   textSample: string;
   timestamp: string;
 }
+
 interface PageProps {
-    params: {
-      tokenId: string;
-    };
-  }
-  
-  export default function ChatPage({ params }: PageProps) {
+  params: {
+    tokenId: string;
+  };
+}
+
+export default function ChatPage({ params }: PageProps) {
   const searchParams = useSearchParams();
   const [metadata, setMetadata] = useState<ChatMetadata | null>(null);
   const [inputMessage, setInputMessage] = useState('');
   const [messages, setMessages] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Validate metadata structure
+  const isValidMetadata = (data: any): data is ChatMetadata => {
+    return (
+      typeof data === 'object' &&
+      data !== null &&
+      'modelName' in data &&
+      'role' in data &&
+      'textSample' in data &&
+      'timestamp' in data
+    );
+  };
 
   useEffect(() => {
     const encodedMetadata = searchParams.get('metadata');
@@ -29,13 +43,23 @@ interface PageProps {
       try {
         const decodedMetadata = decodeURIComponent(encodedMetadata);
         const parsedMetadata = JSON.parse(decodedMetadata);
+        
+        if (!isValidMetadata(parsedMetadata)) {
+          throw new Error('Invalid metadata format');
+        }
+        
         setMetadata(parsedMetadata);
       } catch (err) {
         console.error('Error parsing metadata:', err);
-        setError('Invalid chat configuration. Please try again.');
+        setError('Invalid chat configuration. Please create a new AI twin.');
       }
     }
   }, [searchParams]);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,7 +76,11 @@ interface PageProps {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [{ role: 'user', content: newMessage }],
+          // Send full conversation history for context
+          messages: [
+            ...messages,
+            { role: 'user', content: newMessage }
+          ],
           metadata: {
             modelName: metadata.modelName,
             role: metadata.role,
@@ -62,7 +90,8 @@ interface PageProps {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to get response');
       }
 
       const data = await response.json();
@@ -70,7 +99,9 @@ interface PageProps {
     } catch (error) {
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: `Sorry, I can't respond right now. Please ask me about ${metadata.role}`
+        content: error instanceof Error ? 
+          `Error: ${error.message}` : 
+          `Sorry, I can't respond right now. Please ask me about ${metadata.role}`
       }]);
     } finally {
       setIsLoading(false);
@@ -80,8 +111,11 @@ interface PageProps {
   if (error) {
     return (
       <div className={styles.errorContainer}>
-        <h2>Error</h2>
+        <h2>Configuration Error</h2>
         <p>{error}</p>
+        <a href="/dashboard" className={styles.errorLink}>
+          Return to Dashboard
+        </a>
       </div>
     );
   }
@@ -90,7 +124,7 @@ interface PageProps {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.spinner}></div>
-        <p>Loading AI clone...</p>
+        <p>Initializing AI clone...</p>
       </div>
     );
   }
@@ -99,10 +133,18 @@ interface PageProps {
     <div className={styles.chatContainer}>
       <header className={styles.chatHeader}>
         <h1>{metadata.modelName}</h1>
-        <p>{metadata.role} Specialist</p>
-        <p className={styles.timestamp}>
-          Created: {new Date(metadata.timestamp).toLocaleDateString()}
-        </p>
+        <div className={styles.metaInfo}>
+          <span className={styles.roleBadge}>{metadata.role}</span>
+          <span className={styles.timestamp}>
+            Created: {new Date(metadata.timestamp).toLocaleDateString(undefined, {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </span>
+        </div>
       </header>
 
       <div className={styles.messageArea}>
@@ -117,10 +159,11 @@ interface PageProps {
           </div>
         ))}
         {isLoading && (
-          <div className={styles.loading}>
+          <div className={styles.loadingMessage}>
             <div className={styles.dotFlashing}></div>
           </div>
         )}
+        <div ref={messagesEndRef} />
       </div>
 
       <form className={styles.chatForm} onSubmit={handleSubmit}>
@@ -132,13 +175,19 @@ interface PageProps {
           placeholder={`Ask about ${metadata.role}`}
           required
           disabled={isLoading}
+          aria-label="Chat input"
         />
         <button 
           type="submit" 
           className={styles.submitButton}
           disabled={isLoading}
         >
-          {isLoading ? 'Sending...' : 'Send'}
+          {isLoading ? (
+            <>
+              <span className={styles.buttonSpinner}></span>
+              Sending...
+            </>
+          ) : 'Send'}
         </button>
       </form>
     </div>
