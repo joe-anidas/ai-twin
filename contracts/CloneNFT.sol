@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;  // Updated compiler version
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
@@ -8,8 +8,8 @@ contract CloneNFT is ERC721 {
     using Address for address payable;
     
     uint256 private _tokenIdCounter;
-    address public monadVerifierAddress;  // Monad sponsor integration
-    
+    address public monadVerifierAddress;
+
     struct CloneMetadata {
         string name;
         string role;
@@ -21,7 +21,7 @@ contract CloneNFT is ERC721 {
 
     mapping(uint256 => CloneMetadata) public cloneData;
     mapping(address => uint256[]) public userTokens;
-    mapping(bytes32 => bool) public verifiedInferences;  // Monad integration
+    mapping(bytes32 => bool) public verifiedInferences;
 
     event CloneMinted(address indexed owner, uint256 tokenId, string modelHash);
     event LicenseUpdated(uint256 tokenId, bool newStatus);
@@ -31,6 +31,7 @@ contract CloneNFT is ERC721 {
         monadVerifierAddress = _monadVerifier;
     }
 
+    // Main mint function moved up
     function mintClone(
         string memory name,
         string memory role,
@@ -53,7 +54,6 @@ contract CloneNFT is ERC721 {
         emit CloneMinted(msg.sender, tokenId, modelHash);
     }
 
-    // Base-specific gas optimization
     function batchMintClones(
         string[] memory names,
         string[] memory roles,
@@ -65,17 +65,16 @@ contract CloneNFT is ERC721 {
         require(names.length == licenseStatuses.length, "Array length mismatch");
 
         for (uint256 i = 0; i < names.length; i++) {
-            mintClone(names[i], roles[i], modelHashes[i], licenseStatuses[i]);
+            this.mintClone(names[i], roles[i], modelHashes[i], licenseStatuses[i]);
         }
     }
 
     function updateLicenseStatus(uint256 tokenId, bool newStatus) external {
-        require(_isApprovedOrOwner(msg.sender, tokenId), "Not owner/approved");
+        require(_isApprovedOrOwner(_msgSender(), tokenId), "Not owner/approved");
         cloneData[tokenId].licenseEnabled = newStatus;
         emit LicenseUpdated(tokenId, newStatus);
     }
 
-    // Monad sponsor integration - AI inference verification
     function verifyInference(
         uint256 tokenId,
         string memory inputData,
@@ -120,7 +119,6 @@ contract CloneNFT is ERC721 {
         return (tokenIds, modelHashes, licenseStatuses);
     }
 
-    // Base sponsor integration - gas optimization
     function _baseURI() internal pure override returns (string memory) {
         return "https://base-optimized-uri.example.com/metadata/";
     }
