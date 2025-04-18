@@ -7,28 +7,30 @@ interface ChatMetadata {
   modelName: string;
   role: string;
   textSample: string;
+  timestamp: string;
 }
 
 export default function ChatPage({ params }: { params: { tokenId: string } }) {
   const searchParams = useSearchParams();
-  const metadataUrl = searchParams.get('metadata');
   const [metadata, setMetadata] = useState<ChatMetadata | null>(null);
   const [inputMessage, setInputMessage] = useState('');
   const [messages, setMessages] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchMetadata = async () => {
+    const encodedMetadata = searchParams.get('metadata');
+    if (encodedMetadata) {
       try {
-        const response = await fetch(decodeURIComponent(metadataUrl || ''));
-        const data: ChatMetadata = await response.json();
-        setMetadata(data);
-      } catch (error) {
-        console.error('Error loading metadata:', error);
+        const decodedMetadata = decodeURIComponent(encodedMetadata);
+        const parsedMetadata = JSON.parse(decodedMetadata);
+        setMetadata(parsedMetadata);
+      } catch (err) {
+        console.error('Error parsing metadata:', err);
+        setError('Invalid chat configuration. Please try again.');
       }
-    };
-    if (metadataUrl) fetchMetadata();
-  }, [metadataUrl]);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,25 +56,48 @@ export default function ChatPage({ params }: { params: { tokenId: string } }) {
         }),
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
       setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
     } catch (error) {
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: 'Please ask me about ' + metadata.role 
+        content: `Sorry, I can't respond right now. Please ask me about ${metadata.role}`
       }]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (!metadata) return <div>Loading AI clone...</div>;
+  if (error) {
+    return (
+      <div className={styles.errorContainer}>
+        <h2>Error</h2>
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  if (!metadata) {
+    return (
+      <div className={styles.loadingContainer}>
+        <div className={styles.spinner}></div>
+        <p>Loading AI clone...</p>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.chatContainer}>
       <header className={styles.chatHeader}>
         <h1>{metadata.modelName}</h1>
         <p>{metadata.role} Specialist</p>
+        <p className={styles.timestamp}>
+          Created: {new Date(metadata.timestamp).toLocaleDateString()}
+        </p>
       </header>
 
       <div className={styles.messageArea}>
@@ -86,7 +111,11 @@ export default function ChatPage({ params }: { params: { tokenId: string } }) {
             {msg.content}
           </div>
         ))}
-        {isLoading && <div className={styles.loading}>Processing...</div>}
+        {isLoading && (
+          <div className={styles.loading}>
+            <div className={styles.dotFlashing}></div>
+          </div>
+        )}
       </div>
 
       <form className={styles.chatForm} onSubmit={handleSubmit}>
@@ -97,9 +126,14 @@ export default function ChatPage({ params }: { params: { tokenId: string } }) {
           onChange={(e) => setInputMessage(e.target.value)}
           placeholder={`Ask about ${metadata.role}`}
           required
+          disabled={isLoading}
         />
-        <button type="submit" className={styles.submitButton}>
-          Send
+        <button 
+          type="submit" 
+          className={styles.submitButton}
+          disabled={isLoading}
+        >
+          {isLoading ? 'Sending...' : 'Send'}
         </button>
       </form>
     </div>

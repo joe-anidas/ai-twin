@@ -25,7 +25,7 @@ type ContractContextType = {
 };
 
 const ContractContext = createContext<ContractContextType | null>(null);
-const CONTRACT_ADDRESS = "0x68B76bdD2d3E285dc76f5FDBD3cf63072561A3A6" as Address;
+const CONTRACT_ADDRESS =(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "0x68B76bdD2d3E285dc76f5FDBD3cf63072561A3A6")as Address;
 const CONTRACT_VERSION = "v2.1";
 
 export const ContractProvider = ({ children }: { children: ReactNode }) => {

@@ -8,6 +8,7 @@ interface CloneMetadata {
   role?: string;
   visibility?: string;
   timestamp?: string;
+  textSample?: string;
 }
 
 export default function CloneCard({ clone }: { clone: { tokenId: bigint; metadata: string } }) {
@@ -24,6 +25,12 @@ export default function CloneCard({ clone }: { clone: { tokenId: bigint; metadat
       try {
         const response = await fetch(clone.metadata);
         if (!response.ok) throw new Error('Failed to load metadata');
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType?.includes('application/json')) {
+          throw new Error('Invalid metadata format');
+        }
+
         const data = await response.json();
         setCloneData(data);
       } catch (error) {
@@ -38,7 +45,21 @@ export default function CloneCard({ clone }: { clone: { tokenId: bigint; metadat
   }, [clone.metadata]);
 
   const handleChatClick = () => {
-    router.push(`/chat/${clone.tokenId.toString()}?metadata=${encodeURIComponent(clone.metadata)}`);
+    if (!cloneData) return;
+    
+    try {
+      const encodedMetadata = encodeURIComponent(JSON.stringify({
+        modelName: cloneData.modelName,
+        role: cloneData.role,
+        textSample: cloneData.textSample,
+        timestamp: cloneData.timestamp
+      }));
+      
+      router.push(`/chat/${clone.tokenId.toString()}?metadata=${encodedMetadata}`);
+    } catch (error) {
+      console.error('Error encoding metadata:', error);
+      setError('Failed to start chat session');
+    }
   };
 
   return (
@@ -68,7 +89,7 @@ export default function CloneCard({ clone }: { clone: { tokenId: bigint; metadat
       <button
         onClick={handleChatClick}
         className={styles.linkButton}
-        disabled={isLoading || error !== null}
+        disabled={isLoading || error !== null || !cloneData}
       >
         {isLoading ? 'Loading...' : 'Chat with Model'}
       </button>
