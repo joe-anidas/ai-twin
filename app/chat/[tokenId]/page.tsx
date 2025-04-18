@@ -76,7 +76,6 @@ export default function ChatPage({ params }: PageProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          // Send full conversation history for context
           messages: [
             ...messages,
             { role: 'user', content: newMessage }
