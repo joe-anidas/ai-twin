@@ -1,22 +1,27 @@
-// components/CreateAITwinForm.tsx
 import { useState } from "react";
 import { uploadFileToIPFS, uploadJSONToIPFS } from "@/utils/ipfs";
 
 interface Props {
   address: string;
   onUpload: (ipfsUrl: string) => void;
-  onCancel: () => void; // Add this line to accept the onCancel prop
+  onCancel: () => void;
 }
 
 export default function CreateAITwinForm({ address, onUpload, onCancel }: Props) {
+  const [modelName, setModelName] = useState("");
   const [text, setText] = useState("");
   const [role, setRole] = useState("Mentor");
   const [visibility, setVisibility] = useState("Public");
   const [file, setFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false); // Loading state
-  const [error, setError] = useState<string | null>(null); // Error state
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
+    if (!modelName.trim()) {
+      setError("Model name is required.");
+      return;
+    }
+
     if (!text.trim()) {
       setError("Text sample is required.");
       return;
@@ -24,7 +29,7 @@ export default function CreateAITwinForm({ address, onUpload, onCancel }: Props)
 
     try {
       setLoading(true);
-      setError(null); // Reset error on each submit
+      setError(null);
 
       let fileHash = "";
       if (file) {
@@ -33,6 +38,7 @@ export default function CreateAITwinForm({ address, onUpload, onCancel }: Props)
 
       const metadata = {
         address,
+        modelName,
         textSample: text,
         role,
         visibility,
@@ -42,17 +48,32 @@ export default function CreateAITwinForm({ address, onUpload, onCancel }: Props)
 
       const jsonHash = await uploadJSONToIPFS(metadata);
       onUpload(`https://gateway.pinata.cloud/ipfs/${jsonHash}`);
+
+      // Reset form fields
+      setModelName("");
+      setText("");
+      setRole("Mentor");
+      setVisibility("Public");
+      setFile(null);
     } catch (err: any) {
       console.error("Error uploading AI twin:", err.message);
       setError("Failed to upload the AI twin. Please try again.");
     } finally {
-      setLoading(false); // Reset loading state
+      setLoading(false);
     }
   };
 
   return (
     <div style={{ marginTop: "20px" }}>
-      {error && <p style={{ color: "red" }}>{error}</p>} {/* Display error message */}
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
+      <input
+        type="text"
+        placeholder="Enter model name..."
+        value={modelName}
+        onChange={(e) => setModelName(e.target.value)}
+        style={{ width: "100%", marginBottom: "10px" }}
+      />
 
       <textarea
         placeholder="Enter text samples..."
@@ -61,6 +82,7 @@ export default function CreateAITwinForm({ address, onUpload, onCancel }: Props)
         rows={5}
         style={{ width: "100%", marginBottom: "10px" }}
       />
+
       <input
         type="file"
         onChange={(e) => setFile(e.target.files?.[0] || null)}
@@ -89,13 +111,13 @@ export default function CreateAITwinForm({ address, onUpload, onCancel }: Props)
       <button
         onClick={handleSubmit}
         style={{ display: "block", marginTop: "10px" }}
-        disabled={loading} // Disable button while loading
+        disabled={loading}
       >
         {loading ? "Creating AI Twin..." : "Create AI Twin"}
       </button>
 
       <button
-        onClick={onCancel} // Calls onCancel when the user clicks the cancel button
+        onClick={onCancel}
         style={{ display: "block", marginTop: "10px", backgroundColor: "gray" }}
       >
         Cancel
