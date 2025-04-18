@@ -102,7 +102,7 @@ export const ContractProvider = ({ children }: { children: ReactNode }) => {
       return [];
     }
   };
-  
+    
 
   const mintCloneNFT = async (metadataURI: string): Promise<`0x${string}`> => {
     if (!account.address) throw new Error("Wallet not connected");

@@ -16,8 +16,7 @@ export default function Dashboard() {
   const { switchChain } = useSwitchChain();
 
   const [showForm, setShowForm] = useState(false);
-  const [ipfsHash, setIpfsHash] = useState("");
-  const [mintingInProgress, setMintingInProgress] = useState(false);
+  const [mintingInProgress, setMintingInProgress] = useState<string | null>(null);
   const [localModels, setLocalModels] = useState<string[]>([]);
   const [nftClones, setNftClones] = useState<Array<{ tokenId: bigint; metadata: string }>>([]);
 
@@ -36,24 +35,24 @@ export default function Dashboard() {
     loadData();
   }, [account?.address, address, getOwnedClones]);
 
-  const handleMint = async () => {
-    if (!ipfsHash) return;
-    
+  const handleMint = async (hash: string) => {
     try {
-      setMintingInProgress(true);
-      await mintCloneNFT(ipfsHash);
+      setMintingInProgress(hash);
+      await mintCloneNFT(hash);
       setNftClones(await getOwnedClones());
-      setLocalModels(prev => prev.filter(hash => hash !== ipfsHash));
-      setIpfsHash("");
+      setLocalModels(prev => {
+        const updated = prev.filter(h => h !== hash);
+        localStorage.setItem(`aiModels-${address}`, JSON.stringify(updated));
+        return updated;
+      });
     } catch (error) {
       console.error("Minting failed:", error);
     } finally {
-      setMintingInProgress(false);
+      setMintingInProgress(null);
     }
   };
 
   const handleUpload = (hash: string) => {
-    setIpfsHash(hash);
     setLocalModels(prev => {
       const updated = [...prev, hash];
       localStorage.setItem(`aiModels-${address}`, JSON.stringify(updated));
@@ -98,18 +97,6 @@ export default function Dashboard() {
                 onUpload={handleUpload} 
                 onCancel={() => setShowForm(false)}
               />
-              {ipfsHash && (
-                <div className={styles.mintSection}>
-                  <button
-                    onClick={handleMint}
-                    disabled={mintingInProgress}
-                    className={styles.mintButton}
-                  >
-                    {mintingInProgress ? "Minting..." : "Mint as NFT"}
-                  </button>
-                  <p className={styles.ipfsHash}>IPFS Hash: {ipfsHash}</p>
-                </div>
-              )}
             </div>
           )}
         </section>
@@ -128,6 +115,13 @@ export default function Dashboard() {
                 >
                   View Metadata
                 </a>
+                <button
+                  onClick={() => handleMint(model)}
+                  disabled={mintingInProgress === model}
+                  className={styles.mintButton}
+                >
+                  {mintingInProgress === model ? "Minting..." : "Mint as NFT"}
+                </button>
               </div>
             ))}
             {localModels.length === 0 && <p>No unminted models found</p>}
