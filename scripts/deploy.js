@@ -7,7 +7,9 @@ async function main() {
   const cloneNFT = await CloneNFT.deploy(monadVerifierAddress);
 
   await cloneNFT.waitForDeployment();
-  console.log("CloneNFT deployed to:", cloneNFT.address || cloneNFT.target);
+
+  // Use .target to get the contract address
+  console.log("CloneNFT deployed to:", cloneNFT.target);
 }
 
 main().catch((error) => {

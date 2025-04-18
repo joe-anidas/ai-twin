@@ -1,125 +1,51 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;  // Updated compiler version
+pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract CloneNFT is ERC721 {
-    using Address for address payable;
-    
-    uint256 private _tokenIdCounter;
-    address public monadVerifierAddress;
+contract CloneNFT is ERC721URIStorage, Ownable {
+    uint256 public tokenIdCounter;
+    address public monadVerifier;
 
-    struct CloneMetadata {
-        string name;
-        string role;
-        address ownerWallet;
-        string modelHash;
-        bool licenseEnabled;
-        uint256 creationTimestamp;
+    // Mapping to store the AI twin metadata
+    mapping(uint256 => string) public cloneMetadata;
+
+    // Event for minting AI clone NFTs
+    event CloneMinted(address indexed owner, uint256 tokenId, string metadataURI);
+
+    // Constructor to set MonadVerifier contract address
+    constructor(address _monadVerifier) ERC721("AICloneNFT", "AIClone") {
+        monadVerifier = _monadVerifier;
+        tokenIdCounter = 1;
     }
 
-    mapping(uint256 => CloneMetadata) public cloneData;
-    mapping(address => uint256[]) public userTokens;
-    mapping(bytes32 => bool) public verifiedInferences;
+    // Mint a new AI Clone NFT
+    function mintClone(address to, string memory metadataURI) external onlyOwner {
+        uint256 newTokenId = tokenIdCounter;
+        _safeMint(to, newTokenId);
+        _setTokenURI(newTokenId, metadataURI);
+        cloneMetadata[newTokenId] = metadataURI;  // Store the metadata
 
-    event CloneMinted(address indexed owner, uint256 tokenId, string modelHash);
-    event LicenseUpdated(uint256 tokenId, bool newStatus);
-    event InferenceVerified(bytes32 indexed inferenceId, uint256 tokenId);
+        tokenIdCounter++;
 
-    constructor(address _monadVerifier) ERC721("AI Clone", "CLONE") {
-        monadVerifierAddress = _monadVerifier;
+        emit CloneMinted(to, newTokenId, metadataURI);
     }
 
-    // Main mint function moved up
-    function mintClone(
-        string memory name,
-        string memory role,
-        string memory modelHash,
-        bool licenseEnabled
-    ) external {
-        uint256 tokenId = _tokenIdCounter++;
-        _safeMint(msg.sender, tokenId);
-        
-        cloneData[tokenId] = CloneMetadata({
-            name: name,
-            role: role,
-            ownerWallet: msg.sender,
-            modelHash: modelHash,
-            licenseEnabled: licenseEnabled,
-            creationTimestamp: block.timestamp
-        });
-
-        userTokens[msg.sender].push(tokenId);
-        emit CloneMinted(msg.sender, tokenId, modelHash);
+    // Function to update AI clone metadata
+    function updateMetadata(uint256 tokenId, string memory newMetadataURI) external {
+        require(ownerOf(tokenId) == msg.sender, "You are not the owner of this clone");
+        _setTokenURI(tokenId, newMetadataURI);
+        cloneMetadata[tokenId] = newMetadataURI;
     }
 
-    function batchMintClones(
-        string[] memory names,
-        string[] memory roles,
-        string[] memory modelHashes,
-        bool[] memory licenseStatuses
-    ) external {
-        require(names.length == roles.length, "Array length mismatch");
-        require(names.length == modelHashes.length, "Array length mismatch");
-        require(names.length == licenseStatuses.length, "Array length mismatch");
-
-        for (uint256 i = 0; i < names.length; i++) {
-            this.mintClone(names[i], roles[i], modelHashes[i], licenseStatuses[i]);
-        }
+    // Function to get metadata URI
+    function getCloneMetadata(uint256 tokenId) external view returns (string memory) {
+        return cloneMetadata[tokenId];
     }
 
-    function updateLicenseStatus(uint256 tokenId, bool newStatus) external {
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "Not owner/approved");
-        cloneData[tokenId].licenseEnabled = newStatus;
-        emit LicenseUpdated(tokenId, newStatus);
-    }
-
-    function verifyInference(
-        uint256 tokenId,
-        string memory inputData,
-        string memory outputData
-    ) external {
-        require(_exists(tokenId), "Invalid token");
-        bytes32 inferenceId = keccak256(abi.encodePacked(inputData, outputData));
-        verifiedInferences[inferenceId] = true;
-        emit InferenceVerified(inferenceId, tokenId);
-    }
-
-    function getCloneMetadata(uint256 tokenId) public view returns (
-        string memory, string memory, address, string memory, bool, uint256
-    ) {
-        require(_exists(tokenId), "Invalid token");
-        CloneMetadata memory data = cloneData[tokenId];
-        return (
-            data.name,
-            data.role,
-            data.ownerWallet,
-            data.modelHash,
-            data.licenseEnabled,
-            data.creationTimestamp
-        );
-    }
-
-    function getAllModelsByUser(address user) public view returns (
-        uint256[] memory, 
-        string[] memory, 
-        bool[] memory
-    ) {
-        uint256[] memory tokenIds = userTokens[user];
-        string[] memory modelHashes = new string[](tokenIds.length);
-        bool[] memory licenseStatuses = new bool[](tokenIds.length);
-
-        for (uint256 i = 0; i < tokenIds.length; i++) {
-            CloneMetadata memory data = cloneData[tokenIds[i]];
-            modelHashes[i] = data.modelHash;
-            licenseStatuses[i] = data.licenseEnabled;
-        }
-
-        return (tokenIds, modelHashes, licenseStatuses);
-    }
-
-    function _baseURI() internal pure override returns (string memory) {
-        return "https://base-optimized-uri.example.com/metadata/";
+    // Function to verify ownership
+    function verifyOwnership(address user, uint256 tokenId) external view returns (bool) {
+        return ownerOf(tokenId) == user;
     }
 }

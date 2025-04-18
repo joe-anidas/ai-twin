@@ -1,70 +1,96 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { useAccount, useConnect, usePublicClient, useSignMessage, useDisconnect } from "wagmi"; // Import `useDisconnect`
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import {
+  useAccount,
+  useConnect,
+  useDisconnect,
+  usePublicClient,
+} from "wagmi";
 import { SiweMessage } from "siwe";
 import { cbWalletConnector } from "@/wagmi";
-import type { Hex } from "viem";
+import { Hex, createWalletClient, custom, parseAbi } from "viem";
+import { sepolia } from "viem/chains";
 
 type ContractContextType = {
   connectWallet: () => void;
-  disconnectWallet: () => void; // Add the disconnect function
+  disconnectWallet: () => void;
   account?: ReturnType<typeof useAccount>;
+  mintTwinNFT: (metadataURI: string) => Promise<void>;
 };
 
 const ContractContext = createContext<ContractContextType | null>(null);
 
-export const ContractProvider = ({ children }: { children: React.ReactNode }) => {
-  const { connect } = useConnect();
-  const { disconnect: wagmiDisconnect } = useDisconnect(); // Use `useDisconnect` hook
-  const account = useAccount();
-  const client = usePublicClient();
-  const { signMessage } = useSignMessage();
-  const [signature, setSignature] = useState<Hex | undefined>(undefined);
-  const [message, setMessage] = useState<SiweMessage | undefined>(undefined);
-  const [valid, setValid] = useState<boolean | undefined>(undefined);
+// Replace with your deployed contract address
+const CONTRACT_ADDRESS = "0xYourContractAddressHere";
+const ABI = parseAbi([
+  "function mintModelNFT(address to, string memory metadataURI) public",
+]);
 
-  // Connect wallet function
+export const ContractProvider = ({ children }: { children: ReactNode }) => {
+  const { connect } = useConnect();
+  const { disconnect: wagmiDisconnect } = useDisconnect();
+  const account = useAccount();
+  const publicClient = usePublicClient();
+
+  const [signature, setSignature] = useState<Hex | undefined>();
+  const [message, setMessage] = useState<SiweMessage | undefined>();
+  const [valid, setValid] = useState<boolean | undefined>();
+
   const connectWallet = async () => {
     connect({ connector: cbWalletConnector });
-
     if (account?.address) {
       const chainId = account.chainId;
       const newMessage = new SiweMessage({
-        domain: document.location.host,
+        domain: window.location.host,
         address: account.address,
         chainId,
-        uri: document.location.origin,
+        uri: window.location.origin,
         version: "1",
         statement: "Smart Wallet SIWE Example",
         nonce: "12345678",
       });
-
       setMessage(newMessage);
-      signMessage({ message: newMessage.prepareMessage() });
     }
   };
 
-  // Disconnect wallet function
   const disconnectWallet = async () => {
-    wagmiDisconnect(); // Call wagmi's disconnect method
-    setSignature(undefined); // Clear the signature state
-    setMessage(undefined); // Clear the message state
-    setValid(undefined); // Reset the valid state
+    wagmiDisconnect();
+    setSignature(undefined);
+    setMessage(undefined);
+    setValid(undefined);
   };
 
-  useEffect(() => {
-    if (!signature || !account.address || !client || !message) return;
+  const mintTwinNFT = async (metadataURI: string) => {
+    if (!account.address || typeof window === "undefined") return;
 
-    client.verifyMessage({
-      address: account.address,
-      message: message.prepareMessage(),
-      signature,
-    }).then((isValid) => setValid(isValid));
-  }, [signature, account]);
+    const walletClient = createWalletClient({
+      chain: sepolia,
+      transport: custom((window as any).ethereum),
+    });
+
+    const { request } = await publicClient.simulateContract({
+      address: CONTRACT_ADDRESS,
+      abi: ABI,
+      functionName: "mintModelNFT",
+      args: [account.address, metadataURI],
+      account: account.address,
+    });
+
+    const tx = await walletClient.writeContract(request);
+    console.log("Transaction Hash:", tx);
+  };
 
   return (
-    <ContractContext.Provider value={{ connectWallet, disconnectWallet, account }}>
+    <ContractContext.Provider
+      value={{ connectWallet, disconnectWallet, account, mintTwinNFT }}
+    >
       {children}
     </ContractContext.Provider>
   );
@@ -72,10 +98,8 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
 
 export const useContract = () => {
   const context = useContext(ContractContext);
-
   if (!context) {
     throw new Error("useContract must be used within a ContractProvider");
   }
-
   return context;
 };
