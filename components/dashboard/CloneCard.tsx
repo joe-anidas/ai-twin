@@ -1,5 +1,6 @@
 // components/CloneCard.tsx
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import styles from '@/app/dashboard/[address]/Dashboard.module.css';
 
 interface CloneMetadata {
@@ -10,6 +11,7 @@ interface CloneMetadata {
 }
 
 export default function CloneCard({ clone }: { clone: { tokenId: bigint; metadata: string } }) {
+  const router = useRouter();
   const [cloneData, setCloneData] = useState<CloneMetadata | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +37,10 @@ export default function CloneCard({ clone }: { clone: { tokenId: bigint; metadat
     fetchMetadata();
   }, [clone.metadata]);
 
+  const handleChatClick = () => {
+    router.push(`/chat/${clone.tokenId.toString()}?metadata=${encodeURIComponent(clone.metadata)}`);
+  };
+
   return (
     <div className={styles.card}>
       {isLoading ? (
@@ -59,14 +65,13 @@ export default function CloneCard({ clone }: { clone: { tokenId: bigint; metadat
         </>
       )}
       
-      <a
-        href={clone.metadata}
-        target="_blank"
-        rel="noopener"
-        className={styles.link}
+      <button
+        onClick={handleChatClick}
+        className={styles.linkButton}
+        disabled={isLoading || error !== null}
       >
-        View Full Metadata
-      </a>
+        {isLoading ? 'Loading...' : 'Chat with Model'}
+      </button>
     </div>
   );
 }
