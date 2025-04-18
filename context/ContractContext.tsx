@@ -12,84 +12,131 @@ import {
   useConnect,
   useDisconnect,
   usePublicClient,
+  useSwitchChain,
+  useWalletClient, // Using wagmi's useWalletClient hook
 } from "wagmi";
 import { SiweMessage } from "siwe";
 import { cbWalletConnector } from "@/wagmi";
-import { Hex, createWalletClient, custom, parseAbi } from "viem";
-import { sepolia } from "viem/chains";
+import { Hex, createWalletClient, custom, Chain } from "viem";
+import { baseSepolia } from "viem/chains";
+import CloneNFTAbi from "../artifacts/contracts/CloneNFT.sol/CloneNFT.json";
 
 type ContractContextType = {
   connectWallet: () => void;
   disconnectWallet: () => void;
   account?: ReturnType<typeof useAccount>;
-  mintTwinNFT: (metadataURI: string) => Promise<void>;
+  mintCloneNFT: (metadataURI: string) => Promise<Hex>;
+  isCorrectNetwork: boolean;
+  currentChainId?: number;
 };
 
 const ContractContext = createContext<ContractContextType | null>(null);
-
-// Replace with your deployed contract address
-const CONTRACT_ADDRESS = "0xYourContractAddressHere";
-const ABI = parseAbi([
-  "function mintModelNFT(address to, string memory metadataURI) public",
-]);
+const CONTRACT_ADDRESS = "0x5739E77ecDaBA6D6614802465AC6025774D4cfDf";
 
 export const ContractProvider = ({ children }: { children: ReactNode }) => {
   const { connect } = useConnect();
   const { disconnect: wagmiDisconnect } = useDisconnect();
+  const { switchChainAsync } = useSwitchChain();
   const account = useAccount();
   const publicClient = usePublicClient();
 
-  const [signature, setSignature] = useState<Hex | undefined>();
-  const [message, setMessage] = useState<SiweMessage | undefined>();
-  const [valid, setValid] = useState<boolean | undefined>();
+  // Using wagmi's useWalletClient hook to get the reactive wallet client
+  const { data: walletClient } = useWalletClient();
+
+  const [isCorrectNetwork, setIsCorrectNetwork] = useState(false);
+  const [currentChainId, setCurrentChainId] = useState<number>();
 
   const connectWallet = async () => {
-    connect({ connector: cbWalletConnector });
-    if (account?.address) {
-      const chainId = account.chainId;
-      const newMessage = new SiweMessage({
-        domain: window.location.host,
-        address: account.address,
-        chainId,
-        uri: window.location.origin,
-        version: "1",
-        statement: "Smart Wallet SIWE Example",
-        nonce: "12345678",
-      });
-      setMessage(newMessage);
+    try {
+      connect({ connector: cbWalletConnector });
+    } catch (error) {
+      console.error("Connection error:", error);
+      throw error;
     }
   };
 
   const disconnectWallet = async () => {
     wagmiDisconnect();
-    setSignature(undefined);
-    setMessage(undefined);
-    setValid(undefined);
   };
 
-  const mintTwinNFT = async (metadataURI: string) => {
-    if (!account.address || typeof window === "undefined") return;
-
-    const walletClient = createWalletClient({
-      chain: sepolia,
-      transport: custom((window as any).ethereum),
-    });
-
-    const { request } = await publicClient.simulateContract({
-      address: CONTRACT_ADDRESS,
-      abi: ABI,
-      functionName: "mintModelNFT",
-      args: [account.address, metadataURI],
-      account: account.address,
-    });
-
-    const tx = await walletClient.writeContract(request);
-    console.log("Transaction Hash:", tx);
+  const verifyNetwork = async () => {
+    if (account.chainId === baseSepolia.id) {
+      setIsCorrectNetwork(true);
+      setCurrentChainId(account.chainId);
+      return true;
+    }
+    setIsCorrectNetwork(false);
+    return false;
   };
+
+  const handleSwitchNetwork = async () => {
+    try {
+      await switchChainAsync({ chainId: baseSepolia.id });
+      return true;
+    } catch (error) {
+      console.error("Network switch failed:", error);
+      return false;
+    }
+  };
+
+  const mintCloneNFT = async (metadataURI: string): Promise<Hex> => {
+    if (!account.address || typeof window === "undefined") {
+      throw new Error("Wallet not connected");
+    }
+
+    // Verify network and switch if needed
+    if (!(await verifyNetwork())) {
+      const switched = await handleSwitchNetwork();
+      if (!switched) throw new Error("Network switch required");
+    }
+
+    // Ensure the wallet client is created and ready
+    if (!walletClient) {
+      throw new Error("Wallet client not available");
+    }
+
+    // Double-check chain after potential switch
+    const chainId = await walletClient.getChainId();
+    if (chainId !== baseSepolia.id) {
+      throw new Error(`Wrong network. Current chain: ${chainId}, Required: ${baseSepolia.id}`);
+    }
+
+    if (!publicClient) {
+      throw new Error("publicClient is not defined");
+    }
+
+    try {
+      const { request } = await publicClient.simulateContract({
+        address: CONTRACT_ADDRESS,
+        abi: CloneNFTAbi.abi,
+        functionName: "mintClone",
+        args: [account.address, metadataURI],
+        account: account.address,
+        chain: baseSepolia,
+      });
+
+      const txHash = await walletClient.writeContract(request);
+      return txHash;
+    } catch (error) {
+      console.error("Minting error:", error);
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    verifyNetwork();
+  }, [account.chainId]);
 
   return (
     <ContractContext.Provider
-      value={{ connectWallet, disconnectWallet, account, mintTwinNFT }}
+      value={{
+        connectWallet,
+        disconnectWallet,
+        account,
+        mintCloneNFT,
+        isCorrectNetwork,
+        currentChainId,
+      }}
     >
       {children}
     </ContractContext.Provider>

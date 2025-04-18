@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "C:\\Users\\jayas\\Videos\\SIS\\ai-twin\\contracts\\CloneNFT.sol": {
-      "lastModificationDate": 1744977768112,
-      "contentHash": "7dc8c7d9a85e3cf0c530897a3ac4ff39",
+      "lastModificationDate": 1744978635661,
+      "contentHash": "eb38bfdbe8ed50d9f87f2ae8ff90b86f",
       "sourceName": "contracts/CloneNFT.sol",
       "solcConfig": {
         "version": "0.8.20",
