@@ -9,8 +9,13 @@ interface ChatMetadata {
   textSample: string;
   timestamp: string;
 }
-
-export default function ChatPage({ params }: { params: { tokenId: string } }) {
+interface PageProps {
+    params: {
+      tokenId: string;
+    };
+  }
+  
+  export default function ChatPage({ params }: PageProps) {
   const searchParams = useSearchParams();
   const [metadata, setMetadata] = useState<ChatMetadata | null>(null);
   const [inputMessage, setInputMessage] = useState('');
