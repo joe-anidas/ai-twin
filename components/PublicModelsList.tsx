@@ -118,7 +118,12 @@ export default function PublicModelsList() {
           }
         }
 
-        setPublicModels(models);
+        // Sort models by timestamp descending (newest first)
+        const sortedModels = models.sort((a, b) => 
+          new Date(b.metadata.timestamp).getTime() - new Date(a.metadata.timestamp).getTime()
+        );
+
+        setPublicModels(sortedModels);
       } catch (err) {
         setError('Failed to load public models');
         console.error(err);
