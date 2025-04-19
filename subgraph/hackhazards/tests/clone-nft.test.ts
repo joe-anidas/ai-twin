@@ -9,7 +9,7 @@ import {
 import { Address, BigInt } from "@graphprotocol/graph-ts"
 import { Approval } from "../generated/schema"
 import { Approval as ApprovalEvent } from "../generated/CloneNFT/CloneNFT"
-import { handleApproval } from "../src/clone-nft"
+import { handleApproval } from "../src/mapping"
 import { createApprovalEvent } from "./clone-nft-utils"
 
 // Tests structure (matchstick-as >=0.5.0)
