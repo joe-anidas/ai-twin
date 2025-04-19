@@ -22,7 +22,8 @@
     "react-dom": "^19.0.0",
     "siwe": "^3.0.0",
     "viem": "^2.27.2",
-    "wagmi": "^2.14.16"
+    "wagmi": "^2.14.16",
+    "pino-pretty": "^10.2.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -36,5 +37,8 @@
     "hardhat": "^2.23.0",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "use-sync-external-store": "1.2.0"
   }
 }

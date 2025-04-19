@@ -10,13 +10,15 @@ interface ChatMetadata {
   timestamp: string;
 }
 
-interface PageProps {
+// Updated PageProps to match Next.js 15 expectations
+type PageProps = {
   params: {
     tokenId: string;
   };
-}
+  searchParams: Record<string, string | string[] | undefined>;
+};
 
-export default function ChatPage({ params }: { params: { tokenId: string } }) { // Update here
+export default function ChatPage({ params }: PageProps) {
   const searchParams = useSearchParams();
   const [metadata, setMetadata] = useState<ChatMetadata | null>(null);
   const [inputMessage, setInputMessage] = useState('');
@@ -43,16 +45,16 @@ export default function ChatPage({ params }: { params: { tokenId: string } }) { 
       try {
         const decodedMetadata = decodeURIComponent(encodedMetadata);
         const parsedMetadata = JSON.parse(decodedMetadata);
-        
-        if (!isValidMetadata(parsedMetadata)) {
-          throw new Error('Invalid metadata format');
-        }
-        
-        setMetadata(parsedMetadata);
-      } catch (err) {
-        console.error('Error parsing metadata:', err);
-        setError('Invalid chat configuration. Please create a new AI twin.');
-      }
+
+        if (!isValidMetadata(parsedMetadata)) {  
+          throw new Error('Invalid metadata format');  
+        }  
+
+        setMetadata(parsedMetadata);  
+      } catch (err) {  
+        console.error('Error parsing metadata:', err);  
+        setError('Invalid chat configuration. Please create a new AI twin.');  
+      }  
     }
   }, [searchParams]);
 
@@ -65,45 +67,45 @@ export default function ChatPage({ params }: { params: { tokenId: string } }) { 
     e.preventDefault();
     if (!inputMessage.trim() || !metadata) return;
 
-    const newMessage = inputMessage;
-    setInputMessage('');
-    setMessages(prev => [...prev, { role: 'user', content: newMessage }]);
-    
-    try {
-      setIsLoading(true);
-      
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [
-            ...messages,
-            { role: 'user', content: newMessage }
-          ],
-          metadata: {
-            modelName: metadata.modelName,
-            role: metadata.role,
-            textSample: metadata.textSample
-          }
-        }),
-      });
+    const newMessage = inputMessage;  
+    setInputMessage('');  
+    setMessages(prev => [...prev, { role: 'user', content: newMessage }]);  
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to get response');
-      }
+    try {  
+      setIsLoading(true);  
 
-      const data = await response.json();
-      setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
-    } catch (error) {
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: error instanceof Error ? 
-          `Error: ${error.message}` : 
-          `Sorry, I can't respond right now. Please ask me about ${metadata.role}`
-      }]);
-    } finally {
-      setIsLoading(false);
+      const response = await fetch('/api/chat', {  
+        method: 'POST',  
+        headers: { 'Content-Type': 'application/json' },  
+        body: JSON.stringify({  
+          messages: [  
+            ...messages,  
+            { role: 'user', content: newMessage }  
+          ],  
+          metadata: {  
+            modelName: metadata.modelName,  
+            role: metadata.role,  
+            textSample: metadata.textSample  
+          }  
+        }),  
+      });  
+
+      if (!response.ok) {  
+        const errorData = await response.json();  
+        throw new Error(errorData.error || 'Failed to get response');  
+      }  
+
+      const data = await response.json();  
+      setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);  
+    } catch (error) {  
+      setMessages(prev => [...prev, {   
+        role: 'assistant',   
+        content: error instanceof Error ?   
+          `Error: ${error.message}` :   
+          `Sorry, I can't respond right now. Please ask me about ${metadata.role}`  
+      }]);  
+    } finally {  
+      setIsLoading(false);  
     }
   };
 
@@ -146,49 +148,49 @@ export default function ChatPage({ params }: { params: { tokenId: string } }) { 
         </div>
       </header>
 
-      <div className={styles.messageArea}>
-        {messages.map((msg, i) => (
-          <div 
-            key={i} 
-            className={`${styles.message} ${
-              msg.role === 'user' ? styles.messageUser : styles.messageAssistant
-            }`}
-          >
-            {msg.content}
-          </div>
-        ))}
-        {isLoading && (
-          <div className={styles.loadingMessage}>
-            <div className={styles.dotFlashing}></div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+      <div className={styles.messageArea}>  
+        {messages.map((msg, i) => (  
+          <div   
+            key={i}   
+            className={`${styles.message} ${  
+              msg.role === 'user' ? styles.messageUser : styles.messageAssistant  
+            }`}  
+          >  
+            {msg.content}  
+          </div>  
+        ))}  
+        {isLoading && (  
+          <div className={styles.loadingMessage}>  
+            <div className={styles.dotFlashing}></div>  
+          </div>  
+        )}  
+        <div ref={messagesEndRef} />  
+      </div>  
 
-      <form className={styles.chatForm} onSubmit={handleSubmit}>
-        <input
-          type="text"
-          className={styles.chatInput}
-          value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
-          placeholder={`Ask about ${metadata.role}`}
-          required
-          disabled={isLoading}
-          aria-label="Chat input"
-        />
-        <button 
-          type="submit" 
-          className={styles.submitButton}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <>
-              <span className={styles.buttonSpinner}></span>
-              Sending...
-            </>
-          ) : 'Send'}
-        </button>
-      </form>
+      <form className={styles.chatForm} onSubmit={handleSubmit}>  
+        <input  
+          type="text"  
+          className={styles.chatInput}  
+          value={inputMessage}  
+          onChange={(e) => setInputMessage(e.target.value)}  
+          placeholder={`Ask about ${metadata.role}`}  
+          required  
+          disabled={isLoading}  
+          aria-label="Chat input"  
+        />  
+        <button   
+          type="submit"   
+          className={styles.submitButton}  
+          disabled={isLoading}  
+        >  
+          {isLoading ? (  
+            <>  
+              <span className={styles.buttonSpinner}></span>  
+              Sending...  
+            </>  
+          ) : 'Send'}  
+        </button>  
+      </form>  
     </div>
   );
 }
