@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
-import styles from './page.module.css';
+import { ArrowPathIcon, ArrowUpCircleIcon } from '@heroicons/react/24/solid';
 
 interface ChatMetadata {
   modelName: string;
@@ -104,86 +104,104 @@ export default function ChatClient() {
 
   if (error) {
     return (
-      <div className={styles.errorContainer}>
-        <h2>Configuration Error</h2>
-        <p>{error}</p>
-        <a href="/dashboard" className={styles.errorLink}>
-          Return to Dashboard
-        </a>
+      <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-6 text-center space-y-6">
+        <div className="max-w-2xl w-full bg-red-900/30 rounded-xl p-8 border border-red-800/50">
+          <h2 className="text-2xl font-bold text-red-400 mb-4">Quantum Flux Detected</h2>
+          <p className="text-red-300">{error}</p>
+          <a
+            href="/dashboard"
+            className="mt-6 inline-flex items-center px-6 py-3 bg-red-600/30 hover:bg-red-600/40 border border-red-700/50 rounded-lg text-red-200 transition-all duration-200"
+          >
+            Recalibrate Dimensions
+          </a>
+        </div>
       </div>
     );
   }
 
   if (!metadata) {
     return (
-      <div className={styles.loadingContainer}>
-        <div className={styles.spinner}></div>
-        <p>Initializing AI clone...</p>
+      <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-6 space-y-6">
+        <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-gray-300 text-lg">Initializing quantum entanglement...</p>
       </div>
     );
   }
 
   return (
-    <div className={styles.chatContainer}>
-      <header className={styles.chatHeader}>
-        <h1>{metadata.modelName}</h1>
-        <div className={styles.metaInfo}>
-          <span className={styles.roleBadge}>{metadata.role}</span>
-          <span className={styles.timestamp}>
+    <div className="min-h-screen bg-gray-900 flex flex-col">
+      <header className="border-b border-gray-700/50 bg-gradient-to-r from-gray-900 via-gray-900/80 to-gray-900">
+        <div className="max-w-4xl mx-auto p-6 space-y-2">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-gray-100 truncate">
+              {metadata.modelName}
+            </h1>
+            <span className="px-3 py-1 text-sm font-medium text-indigo-400 bg-indigo-900/30 rounded-full backdrop-blur-sm">
+              {metadata.role}
+            </span>
+          </div>
+          <p className="text-gray-400 text-sm">
             Created: {new Date(metadata.timestamp).toLocaleDateString(undefined, {
               year: 'numeric',
-              month: 'long',
+              month: 'short',
               day: 'numeric',
               hour: '2-digit',
               minute: '2-digit'
             })}
-          </span>
+          </p>
         </div>
       </header>
 
-      <div className={styles.messageArea}>  
-        {messages.map((msg, i) => (  
-          <div   
-            key={i}   
-            className={`${styles.message} ${  
-              msg.role === 'user' ? styles.messageUser : styles.messageAssistant  
-            }`}  
-          >  
-            {msg.content}  
-          </div>  
-        ))}  
-        {isLoading && (  
-          <div className={styles.loadingMessage}>  
-            <div className={styles.dotFlashing}></div>  
-          </div>  
-        )}  
-        <div ref={messagesEndRef} />  
-      </div>  
+      <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-gray-700/50 scrollbar-track-gray-900">
+        <div className="max-w-4xl mx-auto space-y-8">
+          {messages.map((msg, i) => (
+            <div
+              key={i}
+              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              <div
+                className={`max-w-3xl p-4 rounded-2xl ${
+                  msg.role === 'user'
+                    ? 'bg-indigo-600/30 border border-indigo-700/50'
+                    : 'bg-gray-800/50 border border-gray-700/50'
+                }`}
+              >
+                <p className="text-gray-100">{msg.content}</p>
+              </div>
+            </div>
+          ))}
+          {isLoading && (
+            <div className="flex items-center space-x-2 text-gray-400">
+              <ArrowPathIcon className="w-5 h-5 animate-spin" />
+              <span>Processing quantum states...</span>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      </div>
 
-      <form className={styles.chatForm} onSubmit={handleSubmit}>  
-        <input  
-          type="text"  
-          className={styles.chatInput}  
-          value={inputMessage}  
-          onChange={(e) => setInputMessage(e.target.value)}  
-          placeholder={`Ask about ${metadata.role}`}  
-          required  
-          disabled={isLoading}  
-          aria-label="Chat input"  
-        />  
-        <button   
-          type="submit"   
-          className={styles.submitButton}  
-          disabled={isLoading}  
-        >  
-          {isLoading ? (  
-            <>  
-              <span className={styles.buttonSpinner}></span>  
-              Sending...  
-            </>  
-          ) : 'Send'}  
-        </button>  
-      </form>  
+      <form
+        onSubmit={handleSubmit}
+        className="border-t border-gray-700/50 bg-gray-900/50 backdrop-blur-sm p-6"
+      >
+        <div className="max-w-4xl mx-auto flex items-center space-x-4">
+          <input
+            type="text"
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            placeholder={`Ask about ${metadata.role}`}
+            disabled={isLoading}
+            className="flex-1 px-6 py-4 bg-gray-800/50 border border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-100 placeholder-gray-500 transition-all"
+          />
+          <button
+            type="submit"
+            disabled={isLoading || !inputMessage.trim()}
+            className="p-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-xl text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            <ArrowUpCircleIcon className="w-6 h-6" />
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

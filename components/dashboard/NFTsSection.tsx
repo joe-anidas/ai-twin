@@ -12,13 +12,16 @@ export default function NFTsSection({ nftClones, contractAddress, isLoading }: N
   const sortedClones = [...nftClones].sort((a, b) => Number(b.tokenId) - Number(a.tokenId));
 
   return (
-    <section className="w-full">
-      <h2 className="text-2xl font-bold mb-6 text-gray-100">Your NFT Clones</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <section className="w-full space-y-8">
+      <h2 className="text-3xl font-bold text-black-100 mb-6">
+        🌀 Your AI Clones
+      </h2>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {isLoading ? (
-          <div className="col-span-full flex items-center justify-center p-6 bg-white/5 rounded-lg animate-pulse">
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-            <span className="text-gray-300">Updating clones...</span>
+          <div className="col-span-full flex flex-col items-center justify-center h-64 space-y-6">
+            <div className="w-12 h-12 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+            <p className="text-gray-300 text-lg">Syncing neural clones...</p>
           </div>
         ) : (
           <>
@@ -30,9 +33,14 @@ export default function NFTsSection({ nftClones, contractAddress, isLoading }: N
               />
             ))}
             {nftClones.length === 0 && !isLoading && (
-              <p className="col-span-full text-center text-gray-400 py-8">
-                No NFT clones minted yet
-              </p>
+              <div className="col-span-full text-center py-12 space-y-4 bg-gray-900/30 rounded-xl">
+                <p className="text-xl text-gray-300">
+                  🌌 No NFT clones discovered yet
+                </p>
+                <p className="text-sm text-gray-400">
+                  Mint your first clone to begin the cosmic journey
+                </p>
+              </div>
             )}
           </>
         )}

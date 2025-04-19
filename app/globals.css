@@ -1,1 +1,17 @@
 @import 'tailwindcss';
+
+@keyframes dot-flashing {
+    0% { opacity: 0.2; }
+    50% { opacity: 1; }
+    100% { opacity: 0.2; }
+  }
+  
+  .animate-dotFlashing {
+    animation: dot-flashing 1.4s infinite linear;
+  }
+  .animate-dotFlashing::before {
+    animation-delay: 0.2s;
+  }
+  .animate-dotFlashing::after {
+    animation-delay: 0.4s;
+  }
