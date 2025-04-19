@@ -11,7 +11,7 @@ interface ChatMetadata {
   timestamp: string;
 }
 
-export default function ChatClient({ tokenId }: { tokenId: string }) {
+export default function ChatClient() {
   const searchParams = useSearchParams();
   const [metadata, setMetadata] = useState<ChatMetadata | null>(null);
   const [inputMessage, setInputMessage] = useState('');
@@ -79,8 +79,7 @@ export default function ChatClient({ tokenId }: { tokenId: string }) {
             modelName: metadata.modelName,  
             role: metadata.role,  
             textSample: metadata.textSample  
-          },
-          tokenId: tokenId // Pass the tokenId to the API
+          }
         }),  
       });  
 
