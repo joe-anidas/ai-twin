@@ -17,6 +17,7 @@ type ContractContextType = {
   isCorrectNetwork: boolean;
   currentChainId?: number;
   contractAddress: Address;
+  isDisconnecting: boolean;
 };
 
 const ContractContext = createContext<ContractContextType | null>(null);
@@ -29,7 +30,7 @@ export const ContractProvider = ({ children }: { children: ReactNode }) => {
   const account = useAccount();
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
-
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [isCorrectNetwork, setIsCorrectNetwork] = useState(false);
   const [currentChainId, setCurrentChainId] = useState<number>();
 
@@ -43,7 +44,14 @@ export const ContractProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const disconnectWallet = async () => {
-    wagmiDisconnect();
+    setIsDisconnecting(true);
+    try {
+      wagmiDisconnect();
+      // Add a small delay to ensure smooth transition
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } finally {
+      setIsDisconnecting(false);
+    }
   };
 
   const verifyNetwork = async () => {
@@ -126,6 +134,7 @@ export const ContractProvider = ({ children }: { children: ReactNode }) => {
       isCorrectNetwork,
       currentChainId,
       contractAddress: CONTRACT_ADDRESS,
+      isDisconnecting,
     }}>
       {children}
     </ContractContext.Provider>

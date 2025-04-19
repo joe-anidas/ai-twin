@@ -9,6 +9,7 @@ import ModelsSection from "@/components/dashboard/ModelsSection";
 import NFTsSection from "@/components/dashboard/NFTsSection";
 import { useContract} from "@/context/ContractContext";
 import { CloneData } from "@/lib/queries";
+import { LoadingScreen } from "@/components/LoadingScreen";
 
 export default function Dashboard() {
   const { address } = useParams();
@@ -18,7 +19,7 @@ export default function Dashboard() {
     mintCloneNFT, 
     isCorrectNetwork, 
     getOwnedClones,
-    contractAddress
+    contractAddress,isDisconnecting
   } = useContract();
   
   const [localModels, setLocalModels] = useState<string[]>([]);
@@ -64,15 +65,15 @@ export default function Dashboard() {
     setLocalModels(prev => [...prev, hash]);
   };
 
-  if (!isCorrectNetwork) return <NetworkAlert />;
+  if (!isCorrectNetwork && !isDisconnecting) return <NetworkAlert />;
 
   return (
     <div className="min-h-screen bg-gray-900">
       <Navbar />
-      
+      {isDisconnecting && <LoadingScreen />}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-4xl font-bold text-gray-100 mb-8">
-          🪐 AI Twin Dashboard
+          🪐 Twin AI Dashboard
         </h1>
 
         <div className="space-y-12">

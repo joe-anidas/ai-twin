@@ -130,6 +130,14 @@ export default function ChatClient() {
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col">
+      {/* Groq Certification Badge */}
+      <div className="fixed bottom-4 right-4 z-50 flex items-center space-x-2 bg-gradient-to-r from-green-500 to-blue-600 px-4 py-2 rounded-full shadow-lg backdrop-blur-sm border border-white/10 hover:shadow-xl transition-all">
+        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+        <span className="text-white font-medium text-sm">Speed Certified by Groq</span>
+      </div>
+
       <header className="border-b border-gray-700/50 bg-gradient-to-r from-gray-900 via-gray-900/80 to-gray-900">
         <div className="max-w-4xl mx-auto p-6 space-y-2">
           <div className="flex items-center justify-between">
