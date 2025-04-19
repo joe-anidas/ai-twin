@@ -1,9 +1,7 @@
 // components/CreationSection.tsx
 "use client";
-
 import { useState } from "react";
 import CreateAITwinForm from "@/components/dashboard/CreateAITwinForm";
-import styles from '@/app/dashboard/[address]/Dashboard.module.css';
 
 export default function CreationSection({ address, onUpload }: { 
   address: string;
@@ -12,16 +10,22 @@ export default function CreationSection({ address, onUpload }: {
   const [showForm, setShowForm] = useState(false);
 
   return (
-    <section className={styles.creationSection}>
+    <section className="w-full mb-12">
       {!showForm ? (
-        <button 
-          onClick={() => setShowForm(true)}
-          className={styles.primaryButton}
-        >
-          + Create New AI Twin
-        </button>
+        <div className="flex justify-center">
+          <button 
+            onClick={() => setShowForm(true)}
+            className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-gray-100 rounded-xl transition-all duration-300 font-medium shadow-lg hover:shadow-indigo-500/20"
+          >
+            <span className="relative z-10 flex items-center">
+              <span className="mr-2">+</span>
+              Create New AI Twin
+            </span>
+            <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-20 rounded-xl" />
+          </button>
+        </div>
       ) : (
-        <div className={styles.formWrapper}>
+        <div className="bg-gray-900/50 rounded-xl border border-gray-700/50 p-6">
           <CreateAITwinForm 
             address={address} 
             onUpload={onUpload} 
