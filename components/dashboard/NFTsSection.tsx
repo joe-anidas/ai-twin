@@ -13,7 +13,7 @@ export default function NFTsSection({ nftClones, contractAddress, isLoading }: N
 
   return (
     <section className="w-full space-y-8">
-      <h2 className="text-3xl font-bold text-black-100 mb-6">
+      <h2 className="text-3xl font-bold text-gray-100 mb-6">
         🌀 Your AI Clones
       </h2>
 

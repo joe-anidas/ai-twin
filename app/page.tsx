@@ -7,7 +7,7 @@ import PublicModelsList from "@/components/PublicModelsList";
 export default function Home() {
   // const { account } = useContract();
   return (
-    <main style={{ padding: "20px" }}>
+    <main>
       <Navbar /> {/* Use the Navbar component that already has connectWallet functionality */}
       <PublicModelsList />
     </main>

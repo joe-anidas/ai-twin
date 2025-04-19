@@ -136,14 +136,14 @@ export default function PublicModelsList() {
             <p className="text-slate-300 text-lg">Discovering AI models...</p>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="flex flex-col gap-4">
             {filteredModels.map((model) => (
               <div 
                 key={model.tokenId}
-                className="bg-slate-800/50 hover:bg-slate-800/70 rounded-xl p-6 transition-all duration-300 group"
+                className="bg-slate-800/50 hover:bg-slate-800/70 rounded-xl p-6 transition-all duration-300 group flex flex-row items-center justify-between"
               >
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-4 mb-2">
                     <h2 className="text-xl font-semibold text-white truncate">
                       {model.metadata.modelName}
                     </h2>
@@ -152,22 +152,16 @@ export default function PublicModelsList() {
                     </span>
                   </div>
                   
-                  {model.metadata.description && (
-                    <p className="text-slate-400 text-sm h-20 overflow-y-auto">
-                      {model.metadata.description}
-                    </p>
-                  )}
-
-                  <div className="space-y-2">
+                  <div className="flex items-center space-x-6 text-sm text-slate-300">
                     <div className="flex items-center space-x-2">
                       <UserIcon className="h-4 w-4 text-slate-400" />
-                      <span className="text-slate-300 text-sm font-mono">
+                      <span className="font-mono">
                         {model.owner.slice(0, 6)}...{model.owner.slice(-4)}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <CalendarIcon className="h-4 w-4 text-slate-400" />
-                      <span className="text-slate-300 text-sm">
+                      <span>
                         {model.timestamp.toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'short',
@@ -178,18 +172,24 @@ export default function PublicModelsList() {
                     {model.metadata.version && (
                       <div className="flex items-center space-x-2">
                         <CodeIcon className="h-4 w-4 text-slate-400" />
-                        <span className="text-slate-300 text-sm">
-                          Version {model.metadata.version}
-                        </span>
+                        <span>Version {model.metadata.version}</span>
                       </div>
                     )}
                   </div>
 
+                  {model.metadata.description && (
+                    <p className="mt-2 text-slate-400 text-sm truncate">
+                      {model.metadata.description}
+                    </p>
+                  )}
+                </div>
+
+                <div className="ml-4 flex-shrink-0">
                   <button
                     onClick={() => handleChatNavigation(model)}
-                    className="w-full mt-4 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-lg transition-all duration-200 flex items-center justify-center"
+                    className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-lg transition-all duration-200 flex items-center justify-center"
                   >
-                    <span>Chat Now</span>
+                    <span>Chat</span>
                     <ArrowRightIcon className="h-4 w-4 ml-2" />
                   </button>
                 </div>
