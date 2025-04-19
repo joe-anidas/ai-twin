@@ -16,7 +16,7 @@ interface PageProps {
   };
 }
 
-export default function ChatPage({ params }: PageProps) {
+export default function ChatPage({ params }: { params: { tokenId: string } }) { // Update here
   const searchParams = useSearchParams();
   const [metadata, setMetadata] = useState<ChatMetadata | null>(null);
   const [inputMessage, setInputMessage] = useState('');
