@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { baseSepolia } from 'viem/chains';
 import CloneNFTAbi from '@/artifacts/contracts/CloneNFT.sol/CloneNFT.json';
 import { createPublicClient, http, type Address } from 'viem';
-import styles from './styles/PublicModelsList.module.css';
+
 
 type PublicModel = {
   tokenId: string;
