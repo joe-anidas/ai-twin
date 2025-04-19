@@ -1,221 +1,171 @@
-// components/PublicModelsList.tsx
 'use client';
 
+import { useQuery } from '@apollo/client';
+import { GET_PUBLIC_MODELS } from '@/lib/queries';
+import { apolloClient } from '@/lib/apollo-client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { baseSepolia } from 'viem/chains';
-import CloneNFTAbi from '@/artifacts/contracts/CloneNFT.sol/CloneNFT.json';
-import { createPublicClient, http, type Address } from 'viem';
 
+type ModelMetadata = {
+  modelName: string;
+  role: string;
+  description?: string;
+  textSample?: string;    // Added
+  timestamp?: string;     // Added
+  version?: string;
+  visibility?: string;
+};
 
 type PublicModel = {
   tokenId: string;
   owner: string;
+  metadata: ModelMetadata;
+  timestamp: Date;
   metadataURI: string;
-  metadata: {
-    modelName: string;
-    role: string;
-    visibility: string;
-    timestamp: string;
-  };
 };
-
-const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as Address;
-const IPFS_GATEWAY = 'https://ipfs.io/ipfs/';
 
 export default function PublicModelsList() {
   const router = useRouter();
-  const [publicModels, setPublicModels] = useState<PublicModel[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  const publicClient = createPublicClient({
-    chain: baseSepolia,
-    transport: http()
+  const [sortedModels, setSortedModels] = useState<PublicModel[]>([]);
+  
+  const { loading, error, data } = useQuery(GET_PUBLIC_MODELS, {
+    client: apolloClient,
+    fetchPolicy: 'cache-and-network'
   });
 
-  const formatIPFSURI = (uri: string) => {
-    if (uri.startsWith('ipfs://')) {
-      return `${IPFS_GATEWAY}${uri.replace('ipfs://', '')}`;
-    }
-    return uri;
-  };
-
   useEffect(() => {
-    const fetchPublicModels = async () => {
-      try {
-        setLoading(true);
-        setError('');
+    const loadModels = async () => {
+      if (!data?.publicModels) return;
 
-        const totalSupply = await publicClient.readContract({
-          address: CONTRACT_ADDRESS,
-          abi: CloneNFTAbi.abi,
-          functionName: 'totalSupply',
-        }) as bigint;
-
-        const models: PublicModel[] = [];
-
-        for (let i = 0; i < Number(totalSupply); i++) {
+      const models = await Promise.all(
+        data.publicModels.map(async (model: any) => {
           try {
-            const tokenId = await publicClient.readContract({
-              address: CONTRACT_ADDRESS,
-              abi: CloneNFTAbi.abi,
-              functionName: 'tokenByIndex',
-              args: [BigInt(i)],
-            }) as bigint;
+            const response = await fetch(model.metadataURI);
+            if (!response.ok) throw new Error('Failed to fetch metadata');
+            
+            const metadata: ModelMetadata = await response.json();
+            
+            // Filter private models based on metadata
+            if (metadata.visibility !== 'Public') return null;
 
-            const [owner, metadataURI] = await Promise.all([
-              publicClient.readContract({
-                address: CONTRACT_ADDRESS,
-                abi: CloneNFTAbi.abi,
-                functionName: 'ownerOf',
-                args: [tokenId],
-              }) as Promise<string>,
-              publicClient.readContract({
-                address: CONTRACT_ADDRESS,
-                abi: CloneNFTAbi.abi,
-                functionName: 'tokenURI',
-                args: [tokenId],
-              }) as Promise<string>,
-            ]);
-
-            const formattedURI = formatIPFSURI(metadataURI);
-
-            try {
-              const response = await fetch(formattedURI);
-              
-              if (!response.ok) {
-                console.error(`HTTP error for ${formattedURI}: ${response.status}`);
-                continue;
-              }
-
-              const contentType = response.headers.get('content-type');
-              if (!contentType?.includes('application/json')) {
-                console.error(`Invalid content type for ${formattedURI}: ${contentType}`);
-                continue;
-              }
-
-              const metadata = await response.json() as {
-                modelName: string;
-                role: string;
-                visibility: string;
-                timestamp: string;
-              };
-
-              if (metadata.visibility === 'Public') {
-                models.push({
-                  tokenId: tokenId.toString(),
-                  owner: owner.toString(),
-                  metadataURI: formattedURI,
-                  metadata
-                });
-              }
-            } catch (err) {
-              console.error(`Error loading metadata for token ${tokenId}:`, err);
-            }
-          } catch (err) {
-            console.error(`Error processing token ${i}:`, err);
+            return {
+              tokenId: model.id.includes('-') ? model.id.split('-')[1] : model.id,
+              owner: model.owner,
+              metadata,
+              timestamp: new Date(Number(model.blockTimestamp) * 1000),
+              metadataURI: model.metadataURI
+            };
+          } catch (error) {
+            console.error('Error loading model metadata:', error);
+            return null;
           }
-        }
+        })
+      );
 
-        // Sort models by timestamp descending (newest first)
-        const sortedModels = models.sort((a, b) => 
-          new Date(b.metadata.timestamp).getTime() - new Date(a.metadata.timestamp).getTime()
-        );
-
-        setPublicModels(sortedModels);
-      } catch (err) {
-        setError('Failed to load public models');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+      const validModels = models.filter(Boolean) as PublicModel[];
+      const sorted = validModels.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+      setSortedModels(sorted);
     };
 
-    fetchPublicModels();
-  }, []);
+    loadModels();
+  }, [data]);
 
   const handleChatNavigation = (model: PublicModel) => {
     try {
-      const encodedMetadata = encodeURIComponent(
-        JSON.stringify(model.metadata)
-      );
-      router.push(`/chat/${model.tokenId}?metadata=${encodedMetadata}`);
+      const encodedMetadata = encodeURIComponent(JSON.stringify({
+        modelName: model.metadata.modelName,
+        role: model.metadata.role,
+        textSample: model.metadata.textSample, // Added from CloneCard
+        timestamp: model.metadata.timestamp,   // Added from CloneCard
+        metadataURI: model.metadataURI
+      }));
+      
+      // Match the CloneCard's URL pattern exactly
+      router.push(`/chat/${model.tokenId.toString()}?metadata=${encodedMetadata}`);
     } catch (error) {
-      console.error('Error encoding metadata:', error);
-      alert('Could not start chat. Please try again later.');
+      console.error('Error navigating to chat:', error);
+      alert('Could not start chat. Please try again.');
     }
   };
 
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-500 text-lg">{error}</p>
+        <p className="text-red-500 text-lg">
+          Error loading models: {error.message}
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-white mb-12 text-center">
-          🌌 Public AI Models
+    <div className="min-h-screen bg-slate-900 p-6">
+      <div className="max-w-7xl mx-auto space-y-10">
+        <h1 className="text-4xl font-bold text-white mb-10 text-center">
+          🌟 Public AI Models
         </h1>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center h-64 space-y-4">
-            <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-slate-300 text-lg">Loading cosmic models...</p>
+          <div className="flex flex-col items-center justify-center h-64 space-y-6">
+            <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"/>
+            <p className="text-slate-300 text-lg">Discovering AI models...</p>
           </div>
         ) : (
-          <div className="space-y-8">
-            {publicModels.map((model) => (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {sortedModels.map((model) => (
               <div 
                 key={model.tokenId}
-                className="group bg-slate-800/50 hover:bg-slate-800/70 backdrop-blur-lg rounded-2xl p-6 transition-all duration-300 ease-out hover:transform hover:scale-[1.005]"
+                className="bg-slate-800/50 hover:bg-slate-800/70 rounded-xl p-6 transition-all duration-300 group"
               >
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-                  {/* Model Information */}
-                  <div className="flex-1 space-y-3">
-                    <div className="flex items-center space-x-4">
-                      <h2 className="text-2xl font-semibold text-white">
-                        {model.metadata.modelName}
-                      </h2>
-                      <span className="px-3 py-1 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-400/30 text-blue-200 text-sm">
-                        {model.metadata.role}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-white truncate">
+                      {model.metadata.modelName}
+                    </h2>
+                    <span className="px-2 py-1 text-xs font-medium text-blue-300 bg-blue-900/30 rounded-full">
+                      {model.metadata.role}
+                    </span>
+                  </div>
+                  
+                  {model.metadata.description && (
+                    <p className="text-slate-400 text-sm h-20 overflow-y-auto">
+                      {model.metadata.description}
+                    </p>
+                  )}
+
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <UserIcon className="h-4 w-4 text-slate-400" />
+                      <span className="text-slate-300 text-sm font-mono">
+                        {model.owner.slice(0, 6)}...{model.owner.slice(-4)}
                       </span>
                     </div>
-                    
-                    <div className="flex flex-wrap gap-4 text-slate-300">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-slate-400">
-                          <UserIcon className="h-5 w-5" />
-                        </span>
-                        <span>
-                          {model.owner.slice(0, 6)}...{model.owner.slice(-4)}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-slate-400">
-                          <CalendarIcon className="h-5 w-5" />
-                        </span>
-                        <span>
-                          {new Date(model.metadata.timestamp).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric'
-                          })}
-                        </span>
-                      </div>
+                    <div className="flex items-center space-x-2">
+                      <CalendarIcon className="h-4 w-4 text-slate-400" />
+                      <span className="text-slate-300 text-sm">
+                        {model.timestamp.toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </span>
                     </div>
+                    {model.metadata.version && (
+                      <div className="flex items-center space-x-2">
+                        <CodeIcon className="h-4 w-4 text-slate-400" />
+                        <span className="text-slate-300 text-sm">
+                          Version {model.metadata.version}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Chat Button */}
                   <button
                     onClick={() => handleChatNavigation(model)}
-                    className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 text-white rounded-xl font-medium transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-blue-500/20"
+                    className="w-full mt-4 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-lg transition-all duration-200 flex items-center justify-center"
                   >
-                    Start Chat →
+                    <span>Chat Now</span>
+                    <ArrowRightIcon className="h-4 w-4 ml-2" />
                   </button>
                 </div>
               </div>
@@ -223,10 +173,10 @@ export default function PublicModelsList() {
           </div>
         )}
 
-        {!loading && publicModels.length === 0 && (
-          <div className="text-center py-24">
-            <p className="text-2xl text-slate-400">
-              🚀 No public models discovered yet... Be the first to launch one!
+        {!loading && sortedModels.length === 0 && (
+          <div className="text-center py-16 space-y-4">
+            <p className="text-xl text-slate-400">
+              🎯 No public models available. Create one to get started!
             </p>
           </div>
         )}
@@ -235,41 +185,39 @@ export default function PublicModelsList() {
   );
 }
 
-// Add these icons (or use your preferred icon library)
+// Icon components
 function UserIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      {...props}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-      />
+    <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
     </svg>
   );
 }
 
 function CalendarIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      {...props}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-      />
+    <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+  );
+}
+
+function CodeIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+        d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+    </svg>
+  );
+}
+
+function ArrowRightIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+        d="M14 5l7 7m0 0l-7 7m7-7H3" />
     </svg>
   );
 }

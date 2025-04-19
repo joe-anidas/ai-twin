@@ -2,14 +2,15 @@ import { gql } from '@apollo/client';
 
 export const GET_PUBLIC_MODELS = gql`
   query GetPublicModels {
-    tokenEntities(where: { visibility: "Public" }) {
+    publicModels(
+      first: 100
+      orderBy: blockTimestamp
+      orderDirection: desc
+    ) {
       id
-      tokenId
       owner
-      modelName
-      role
-      visibility
-      timestamp
+      metadataURI
+      blockTimestamp
     }
   }
 `;
