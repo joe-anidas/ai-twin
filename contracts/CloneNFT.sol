@@ -10,11 +10,31 @@ contract CloneNFT is ERC721URIStorage, ERC721Enumerable, Ownable {
     mapping(uint256 => string) public cloneMetadata;
 
     event CloneMinted(address indexed owner, uint256 tokenId, string metadataURI);
+    event CloneBurned(uint256 tokenId);
 
     constructor() ERC721("AICloneNFT", "AIClone") {
         tokenIdCounter = 1;
     }
 
+    // ================== Added Functionality ==================
+    function exists(uint256 tokenId) public view returns (bool) {
+        return _exists(tokenId);
+    }
+
+    function isOwnerOf(address account, uint256 tokenId) public view returns (bool) {
+        return exists(tokenId) && ownerOf(tokenId) == account;
+    }
+
+    function burn(uint256 tokenId) external {
+        require(
+            _isApprovedOrOwner(msg.sender, tokenId),
+            "Not owner nor approved"
+        );
+        _burn(tokenId);
+        emit CloneBurned(tokenId);
+    }
+
+    // ================== Original Functionality ==================
     function mintClone(address to, string memory metadataURI) external {
         uint256 newTokenId = tokenIdCounter;
         _safeMint(to, newTokenId);
@@ -30,7 +50,7 @@ contract CloneNFT is ERC721URIStorage, ERC721Enumerable, Ownable {
         cloneMetadata[tokenId] = newMetadataURI;
     }
 
-    // Required overrides
+    // ================== Required Overrides ==================
     function _beforeTokenTransfer(
         address from,
         address to,
@@ -42,6 +62,7 @@ contract CloneNFT is ERC721URIStorage, ERC721Enumerable, Ownable {
 
     function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
         super._burn(tokenId);
+        delete cloneMetadata[tokenId];
     }
 
     function tokenURI(uint256 tokenId)
