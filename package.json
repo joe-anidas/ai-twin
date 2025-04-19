@@ -18,24 +18,26 @@
     "groq-sdk": "^0.19.0",
     "js-cookie": "^3.0.5",
     "next": "15.3.1",
+    "pino-pretty": "^10.2.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "siwe": "^3.0.0",
     "viem": "^2.27.2",
-    "wagmi": "^2.14.16",
-    "pino-pretty": "^10.2.3"
+    "wagmi": "^2.14.16"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/postcss": "^4.1.4",
     "@types/node": "^20.17.30",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.21",
     "eslint": "^9",
     "eslint-config-next": "15.3.1",
     "hardhat": "^2.23.0",
-    "tailwindcss": "^4",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.1.4",
     "typescript": "^5"
   },
   "overrides": {
