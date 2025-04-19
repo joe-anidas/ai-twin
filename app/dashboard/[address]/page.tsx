@@ -7,7 +7,8 @@ import NetworkAlert from "@/components/dashboard/NetworkAlert";
 import CreationSection from "@/components/dashboard/CreationSection";
 import ModelsSection from "@/components/dashboard/ModelsSection";
 import NFTsSection from "@/components/dashboard/NFTsSection";
-import { useContract, type CloneData } from "@/context/ContractContext";
+import { useContract} from "@/context/ContractContext";
+import { CloneData } from "@/lib/queries"; // Adjust the import path as necessary
 import styles from './Dashboard.module.css';
 
 export default function Dashboard() {

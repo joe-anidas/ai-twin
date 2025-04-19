@@ -6,12 +6,7 @@ import { useAccount, useConnect, useDisconnect, usePublicClient, useSwitchChain,
 import { baseSepolia } from "viem/chains";
 import CloneNFTAbi from "@/artifacts/contracts/CloneNFT.sol/CloneNFT.json";
 import { Abi, Address, Hex } from "viem";
-
-export type CloneData = {
-  tokenId: bigint;
-  metadata: string;
-  createdAt: number;
-};
+import { getOwnedClones, getSubgraphBlock, CloneData } from "@/lib/queries";
 
 type ContractContextType = {
   connectWallet: () => void;
@@ -25,8 +20,7 @@ type ContractContextType = {
 };
 
 const ContractContext = createContext<ContractContextType | null>(null);
-const CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "0x68B76bdD2d3E285dc76f5FDBD3cf63072561A3A6") as Address;
-const SUBGRAPH_URL = "https://api.studio.thegraph.com/query/109144/hackhazards/v0.0.3";
+const CONTRACT_ADDRESS =process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as Address;
 
 export const ContractProvider = ({ children }: { children: ReactNode }) => {
   const { connect } = useConnect();
@@ -68,81 +62,31 @@ export const ContractProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
   };
-  // context/ContractContext.tsx (updated)
-// Add these new utility functions at the bottom of the ContractProvider component
-const waitForSubgraphSync = async (targetBlock: number): Promise<void> => {
-  const MAX_ATTEMPTS = 30; // ~90 seconds total
-  const POLL_INTERVAL = 3000; // 3 seconds
-  
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    try {
-      const response = await fetch(SUBGRAPH_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: `{ _meta { block { number } } }`
-        })
-      });
 
-      const { data } = await response.json();
-      const currentBlock = data?._meta?.block?.number;
-      
-      if (currentBlock && currentBlock >= targetBlock) {
-        return;
-      }
-    } catch (error) {
-      console.error('Subgraph poll error:', error);
-    }
+  const waitForSubgraphSync = async (targetBlock: number): Promise<void> => {
+    const MAX_ATTEMPTS = 30;
+    const POLL_INTERVAL = 3000;
     
-    await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL));
-  }
-  
-  throw new Error('Subgraph sync timeout');
-};
-
-const getTransactionBlock = async (txHash: Hex): Promise<number> => {
-  if (!publicClient) throw new Error("No public client");
-  const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
-  return Number(receipt.blockNumber);
-};
-  const getOwnedClones = async (): Promise<CloneData[]> => {
-    if (!account?.address) return [];
-
-    try {
-      const response = await fetch(SUBGRAPH_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: `
-            query GetClones($owner: Bytes!) {
-              publicModels(where: { owner: $owner }) {
-                id
-                metadataURI
-                blockTimestamp
-              }
-            }
-          `,
-          variables: {
-            owner: account.address.toLowerCase()
-          }
-        })
-      });
-
-      const { data, errors } = await response.json();
-
-      if (errors) {
-        throw new Error(errors[0].message);
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      try {
+        const currentBlock = await getSubgraphBlock();
+        if (currentBlock >= targetBlock) return;
+      } catch (error) {
+        console.error('Subgraph poll error:', error);
       }
-
-      return data.publicModels.map((nft: any) => ({
-        tokenId: BigInt(nft.id),
-        metadata: nft.metadataURI,
-        createdAt: Number(nft.blockTimestamp)
-      }));
-    } catch (error) {
-      console.error("Subgraph query error:", error);
-      return [];
+      await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL));
     }
+    throw new Error('Subgraph sync timeout');
+  };
+
+  const getTransactionBlock = async (txHash: Hex): Promise<number> => {
+    if (!publicClient) throw new Error("No public client");
+    const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+    return Number(receipt.blockNumber);
+  };
+
+  const fetchOwnedClones = async (): Promise<CloneData[]> => {
+    return account?.address ? getOwnedClones(account.address) : [];
   };
 
   const mintCloneNFT = async (metadataURI: string): Promise<Hex> => {
@@ -178,7 +122,7 @@ const getTransactionBlock = async (txHash: Hex): Promise<number> => {
       disconnectWallet,
       account,
       mintCloneNFT,
-      getOwnedClones,
+      getOwnedClones: fetchOwnedClones,
       isCorrectNetwork,
       currentChainId,
       contractAddress: CONTRACT_ADDRESS,
