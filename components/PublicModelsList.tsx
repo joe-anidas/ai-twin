@@ -156,53 +156,120 @@ export default function PublicModelsList() {
   }
 
   return (
-    // In the return statement
-    <div className={styles.container}>
-        <h1 className={styles.heading}>Public AI Models</h1>
-        
-        {loading ? (
-            <div className={styles.loadingContainer}>
-                <div className={styles.spinner}></div>
-                <p>Loading models...</p>
-            </div>
-        ) : (
-            <div className={styles.grid}>
-                {publicModels.map((model) => (
-                    <div key={model.tokenId} className={styles.card}>
-                        <h2 className={styles.modelName}>{model.metadata.modelName}</h2>
-                        <p className={styles.role}>{model.metadata.role}</p>
-                        
-                        <div className={styles.metaContainer}>
-                            <div className={styles.metaItem}>
-                                <span className={styles.metaLabel}>Owner:</span>
-                                <span className={styles.metaValue}>
-                                    {model.owner.slice(0, 6)}...{model.owner.slice(-4)}
-                                </span>
-                            </div>
-                            <div className={styles.metaItem}>
-                                <span className={styles.metaLabel}>Created:</span>
-                                <span className={styles.metaValue}>
-                                    {new Date(model.metadata.timestamp).toLocaleDateString()}
-                                </span>
-                            </div>
-                        </div>
+    <div className="min-h-screen bg-slate-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-4xl font-bold text-white mb-12 text-center">
+          🌌 Public AI Models
+        </h1>
 
-                        <button
-                            onClick={() => handleChatNavigation(model)}
-                            className={styles.chatButton}
-                        >
-                            Chat with This Model
-                        </button>
+        {loading ? (
+          <div className="flex flex-col items-center justify-center h-64 space-y-4">
+            <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-slate-300 text-lg">Loading cosmic models...</p>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {publicModels.map((model) => (
+              <div 
+                key={model.tokenId}
+                className="group bg-slate-800/50 hover:bg-slate-800/70 backdrop-blur-lg rounded-2xl p-6 transition-all duration-300 ease-out hover:transform hover:scale-[1.005]"
+              >
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
+                  {/* Model Information */}
+                  <div className="flex-1 space-y-3">
+                    <div className="flex items-center space-x-4">
+                      <h2 className="text-2xl font-semibold text-white">
+                        {model.metadata.modelName}
+                      </h2>
+                      <span className="px-3 py-1 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-400/30 text-blue-200 text-sm">
+                        {model.metadata.role}
+                      </span>
                     </div>
-                ))}
-            </div>
+                    
+                    <div className="flex flex-wrap gap-4 text-slate-300">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-slate-400">
+                          <UserIcon className="h-5 w-5" />
+                        </span>
+                        <span>
+                          {model.owner.slice(0, 6)}...{model.owner.slice(-4)}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-slate-400">
+                          <CalendarIcon className="h-5 w-5" />
+                        </span>
+                        <span>
+                          {new Date(model.metadata.timestamp).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Chat Button */}
+                  <button
+                    onClick={() => handleChatNavigation(model)}
+                    className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 text-white rounded-xl font-medium transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-blue-500/20"
+                  >
+                    Start Chat →
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
 
         {!loading && publicModels.length === 0 && (
-            <div className={styles.emptyState}>
-                No public models available
-            </div>
+          <div className="text-center py-24">
+            <p className="text-2xl text-slate-400">
+              🚀 No public models discovered yet... Be the first to launch one!
+            </p>
+          </div>
         )}
+      </div>
     </div>
+  );
+}
+
+// Add these icons (or use your preferred icon library)
+function UserIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+      />
+    </svg>
+  );
+}
+
+function CalendarIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+      />
+    </svg>
   );
 }
