@@ -3,15 +3,15 @@
 import { useQuery } from '@apollo/client';
 import { GET_PUBLIC_MODELS } from '@/lib/queries';
 import { apolloClient } from '@/lib/apollo-client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 
 type ModelMetadata = {
   modelName: string;
   role: string;
   description?: string;
-  textSample?: string;    // Added
-  timestamp?: string;     // Added
+  textSample?: string;
+  timestamp?: string;
   version?: string;
   visibility?: string;
 };
@@ -27,6 +27,7 @@ type PublicModel = {
 export default function PublicModelsList() {
   const router = useRouter();
   const [sortedModels, setSortedModels] = useState<PublicModel[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   
   const { loading, error, data } = useQuery(GET_PUBLIC_MODELS, {
     client: apolloClient,
@@ -45,7 +46,6 @@ export default function PublicModelsList() {
             
             const metadata: ModelMetadata = await response.json();
             
-            // Filter private models based on metadata
             if (metadata.visibility !== 'Public') return null;
 
             return {
@@ -70,17 +70,27 @@ export default function PublicModelsList() {
     loadModels();
   }, [data]);
 
+  const filteredModels = useMemo(() => {
+    if (!searchQuery) return sortedModels;
+    
+    const query = searchQuery.toLowerCase();
+    return sortedModels.filter(model => {
+      const nameMatch = model.metadata.modelName.toLowerCase().includes(query);
+      const ownerMatch = model.owner.toLowerCase().includes(query);
+      return nameMatch || ownerMatch;
+    });
+  }, [sortedModels, searchQuery]);
+
   const handleChatNavigation = (model: PublicModel) => {
     try {
       const encodedMetadata = encodeURIComponent(JSON.stringify({
         modelName: model.metadata.modelName,
         role: model.metadata.role,
-        textSample: model.metadata.textSample, // Added from CloneCard
-        timestamp: model.metadata.timestamp,   // Added from CloneCard
+        textSample: model.metadata.textSample,
+        timestamp: model.metadata.timestamp,
         metadataURI: model.metadataURI
       }));
       
-      // Match the CloneCard's URL pattern exactly
       router.push(`/chat/${model.tokenId.toString()}?metadata=${encodedMetadata}`);
     } catch (error) {
       console.error('Error navigating to chat:', error);
@@ -101,9 +111,24 @@ export default function PublicModelsList() {
   return (
     <div className="min-h-screen bg-slate-900 p-6">
       <div className="max-w-7xl mx-auto space-y-10">
-        <h1 className="text-4xl font-bold text-white mb-10 text-center">
-          🌟 Public AI Models
-        </h1>
+        <div className="space-y-6">
+          <h1 className="text-4xl font-bold text-white mb-4 text-center">
+            🌟 Public AI Models
+          </h1>
+          
+          <div className="relative max-w-2xl mx-auto">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <SearchIcon className="h-5 w-5 text-slate-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search models by name or owner address..."
+              className="w-full pl-10 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-200 placeholder-slate-400 transition-all"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center h-64 space-y-6">
@@ -112,7 +137,7 @@ export default function PublicModelsList() {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {sortedModels.map((model) => (
+            {filteredModels.map((model) => (
               <div 
                 key={model.tokenId}
                 className="bg-slate-800/50 hover:bg-slate-800/70 rounded-xl p-6 transition-all duration-300 group"
@@ -173,11 +198,22 @@ export default function PublicModelsList() {
           </div>
         )}
 
-        {!loading && sortedModels.length === 0 && (
+        {!loading && filteredModels.length === 0 && (
           <div className="text-center py-16 space-y-4">
             <p className="text-xl text-slate-400">
-              🎯 No public models available. Create one to get started!
+              {searchQuery ? 
+                "🔍 No models matching your search..." : 
+                "🎯 No public models available. Create one to get started!"
+              }
             </p>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                Clear search
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -186,6 +222,15 @@ export default function PublicModelsList() {
 }
 
 // Icon components
+function SearchIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+  );
+}
+
 function UserIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
