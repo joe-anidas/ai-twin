@@ -1,17 +1,6 @@
 
-// This file should be named 'page.tsx' in the app/chat/[tokenId]/ directory
-import { Suspense } from 'react';
-import ChatPage from './ChatClient';
+import ChatClient from './ChatClient';
 
-// Server component
-export default function ChatPageWrapper({ 
-  params 
-}: { 
-  params: { tokenId: string } 
-}) {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <ChatPage tokenId={params.tokenId} />
-    </Suspense>
-  );
+export default function ChatPage({ params }: { params: { tokenId: string } }) {
+  return <ChatClient tokenId={params.tokenId} />;
 }

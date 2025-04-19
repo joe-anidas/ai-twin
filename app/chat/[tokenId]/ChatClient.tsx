@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -11,8 +12,7 @@ interface ChatMetadata {
   timestamp: string;
 }
 
-// Client component for the chat interface
-export default function ChatPage({ tokenId }: { tokenId: string }) {
+export default function ChatClient({ tokenId }: { tokenId: string }) {
   const searchParams = useSearchParams();
   const [metadata, setMetadata] = useState<ChatMetadata | null>(null);
   const [inputMessage, setInputMessage] = useState('');
@@ -80,7 +80,8 @@ export default function ChatPage({ tokenId }: { tokenId: string }) {
             modelName: metadata.modelName,  
             role: metadata.role,  
             textSample: metadata.textSample  
-          }  
+          },
+          tokenId: tokenId // Pass the tokenId to the API
         }),  
       });  
 
