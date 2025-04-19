@@ -10,6 +10,7 @@ import { Abi, Address, Hex } from "viem";
 export type CloneData = {
   tokenId: bigint;
   metadata: string;
+  createdAt: number;
 };
 
 type ContractContextType = {
@@ -21,12 +22,11 @@ type ContractContextType = {
   isCorrectNetwork: boolean;
   currentChainId?: number;
   contractAddress: Address;
-  publicClient?: ReturnType<typeof usePublicClient>;
 };
 
 const ContractContext = createContext<ContractContextType | null>(null);
-const CONTRACT_ADDRESS =(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "0x68B76bdD2d3E285dc76f5FDBD3cf63072561A3A6")as Address;
-const CONTRACT_VERSION = "v2.1";
+const CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "0x68B76bdD2d3E285dc76f5FDBD3cf63072561A3A6") as Address;
+const SUBGRAPH_URL = "https://api.studio.thegraph.com/query/109144/hackhazards/v0.0.3";
 
 export const ContractProvider = ({ children }: { children: ReactNode }) => {
   const { connect } = useConnect();
@@ -68,61 +68,79 @@ export const ContractProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
   };
-
-  const getOwnedClones = async (): Promise<CloneData[]> => {
-    if (!publicClient || !account.address) return [];
+  // context/ContractContext.tsx (updated)
+// Add these new utility functions at the bottom of the ContractProvider component
+const waitForSubgraphSync = async (targetBlock: number): Promise<void> => {
+  const MAX_ATTEMPTS = 30; // ~90 seconds total
+  const POLL_INTERVAL = 3000; // 3 seconds
   
-    const cacheKey = `clones-${CONTRACT_VERSION}-${account.address}`;
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     try {
-      // Check cache with BigInt revival
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) {
-        return JSON.parse(cached, (key, value) => {
-          if (key === 'tokenId' && typeof value === 'string') {
-            return BigInt(value);
-          }
-          return value;
-        });
-      }
-
-      // Fetch fresh data
-      const balance = await publicClient.readContract({
-        address: CONTRACT_ADDRESS,
-        abi: CloneNFTAbi.abi as Abi,
-        functionName: 'balanceOf',
-        args: [account.address],
+      const response = await fetch(SUBGRAPH_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: `{ _meta { block { number } } }`
+        })
       });
 
-      const clones: CloneData[] = [];
-      for (let i = 0; i < Number(balance); i++) {
-        const tokenId = await publicClient.readContract({
-          address: CONTRACT_ADDRESS,
-          abi: CloneNFTAbi.abi as Abi,
-          functionName: 'tokenOfOwnerByIndex',
-          args: [account.address, BigInt(i)],
-        }) as bigint;
+      const { data } = await response.json();
+      const currentBlock = data?._meta?.block?.number;
+      
+      if (currentBlock && currentBlock >= targetBlock) {
+        return;
+      }
+    } catch (error) {
+      console.error('Subgraph poll error:', error);
+    }
     
-        const metadata = await publicClient.readContract({
-          address: CONTRACT_ADDRESS,
-          abi: CloneNFTAbi.abi as Abi,
-          functionName: 'tokenURI',
-          args: [tokenId],
-        }) as string;
+    await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL));
+  }
+  
+  throw new Error('Subgraph sync timeout');
+};
 
-        clones.push({ tokenId, metadata });
+const getTransactionBlock = async (txHash: Hex): Promise<number> => {
+  if (!publicClient) throw new Error("No public client");
+  const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+  return Number(receipt.blockNumber);
+};
+  const getOwnedClones = async (): Promise<CloneData[]> => {
+    if (!account?.address) return [];
+
+    try {
+      const response = await fetch(SUBGRAPH_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: `
+            query GetClones($owner: Bytes!) {
+              publicModels(where: { owner: $owner }) {
+                id
+                metadataURI
+                blockTimestamp
+              }
+            }
+          `,
+          variables: {
+            owner: account.address.toLowerCase()
+          }
+        })
+      });
+
+      const { data, errors } = await response.json();
+
+      if (errors) {
+        throw new Error(errors[0].message);
       }
 
-      // Store with BigInt serialization
-      const serializableClones = clones.map(clone => ({
-        ...clone,
-        tokenId: clone.tokenId.toString()
+      return data.publicModels.map((nft: any) => ({
+        tokenId: BigInt(nft.id),
+        metadata: nft.metadataURI,
+        createdAt: Number(nft.blockTimestamp)
       }));
-      localStorage.setItem(cacheKey, JSON.stringify(serializableClones));
-
-      return clones;
     } catch (error) {
-      console.error("Error fetching clones:", error);
-      localStorage.removeItem(cacheKey);
+      console.error("Subgraph query error:", error);
       return [];
     }
   };
@@ -132,11 +150,11 @@ export const ContractProvider = ({ children }: { children: ReactNode }) => {
     if (!(await verifyNetwork()) && !(await handleSwitchNetwork())) {
       throw new Error("Network switch required");
     }
-
+  
     if (!walletClient || !publicClient) {
       throw new Error("Wallet connection error");
     }
-
+  
     const { request } = await publicClient.simulateContract({
       address: CONTRACT_ADDRESS,
       abi: CloneNFTAbi.abi as Abi,
@@ -144,11 +162,12 @@ export const ContractProvider = ({ children }: { children: ReactNode }) => {
       args: [account.address, metadataURI],
       account: account.address,
     });
-
-    // Clear relevant caches
-    localStorage.removeItem(`clones-${CONTRACT_VERSION}-${account.address}`);
+  
+    const txHash = await walletClient.writeContract(request);
+    const blockNumber = await getTransactionBlock(txHash);
+    await waitForSubgraphSync(blockNumber);
     
-    return walletClient.writeContract(request);
+    return txHash;
   };
 
   useEffect(() => { verifyNetwork(); }, [account.chainId]);
@@ -163,7 +182,6 @@ export const ContractProvider = ({ children }: { children: ReactNode }) => {
       isCorrectNetwork,
       currentChainId,
       contractAddress: CONTRACT_ADDRESS,
-      publicClient,
     }}>
       {children}
     </ContractContext.Provider>

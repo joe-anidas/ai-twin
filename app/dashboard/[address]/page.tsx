@@ -18,7 +18,7 @@ export default function Dashboard() {
     mintCloneNFT, 
     isCorrectNetwork, 
     getOwnedClones,
-    contractAddress 
+    contractAddress
   } = useContract();
   
   const [localModels, setLocalModels] = useState<string[]>([]);
@@ -32,52 +32,35 @@ export default function Dashboard() {
   }, [account?.address, address, router]);
 
   useEffect(() => {
-    const loadData = async () => {
-      const cacheKey = `aiModels-${contractAddress}-${address}`;
-      const saved = localStorage.getItem(cacheKey);
-      setLocalModels(saved ? JSON.parse(saved) : []);
-      
+    const loadClones = async () => {
       if (account?.address) {
-        setNftClones(await getOwnedClones());
+        const clones = await getOwnedClones();
+        setNftClones(clones);
       }
     };
-    loadData();
-  }, [account?.address, address, getOwnedClones, contractAddress]);
+    
+    loadClones();
+  }, [account?.address, getOwnedClones]);
 
   const handleMint = async (hash: string) => {
     try {
       setMintingInProgress(hash);
       await mintCloneNFT(hash);
       
-      // Refresh data after minting
+      // Force refresh using state reset
+      setNftClones([]);
       const newClones = await getOwnedClones();
       setNftClones(newClones);
       
-      // Update local models
-      setLocalModels(prev => {
-        const updated = prev.filter(h => h !== hash);
-        localStorage.setItem(
-          `aiModels-${contractAddress}-${address}`, 
-          JSON.stringify(updated)
-        );
-        return updated;
-      });
+      setLocalModels(prev => prev.filter(h => h !== hash));
     } catch (error) {
       console.error("Minting failed:", error);
     } finally {
       setMintingInProgress(null);
     }
   };
-
   const handleUpload = (hash: string) => {
-    setLocalModels(prev => {
-      const updated = [...prev, hash];
-      localStorage.setItem(
-        `aiModels-${contractAddress}-${address}`, 
-        JSON.stringify(updated)
-      );
-      return updated;
-    });
+    setLocalModels(prev => [...prev, hash]);
   };
 
   if (!isCorrectNetwork) return <NetworkAlert />;
@@ -100,9 +83,10 @@ export default function Dashboard() {
         />
         
         <NFTsSection 
-            nftClones={nftClones}
-            contractAddress={contractAddress} // Add this line
-          />
+  nftClones={nftClones}
+  contractAddress={contractAddress}
+  isLoading={mintingInProgress !== null}
+/>
       </main>
     </div>
   );
