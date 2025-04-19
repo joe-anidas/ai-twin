@@ -1,8 +1,0 @@
-{
-  "base-sepolia": {
-    "CloneNFT": {
-      "address": "0x68B76bdD2d3E285dc76f5FDBD3cf63072561A3A6",
-      "startBlock": 24615033
-    }
-  }
-}
