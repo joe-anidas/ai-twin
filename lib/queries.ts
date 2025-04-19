@@ -18,6 +18,8 @@ export const GET_PUBLIC_MODELS = gql`
   }
 `;
 
+
+//for ContractContext.tsx
 export type CloneData = {
   tokenId: bigint;
   metadata: string;
@@ -79,4 +81,35 @@ export const getSubgraphBlock = async (): Promise<number> => {
     }
   `);
   return data._meta.block.number;
+};
+
+//for CreateAITwinForm.tsx
+export const getExistingModelNames = async (): Promise<string[]> => {
+  try {
+    const data = await fetchFromSubgraph<{ publicModels: { metadataURI: string }[] }>(`
+      query GetAllModels {
+        publicModels {
+          metadataURI
+        }
+      }
+    `);
+
+    const names = await Promise.all(
+      data.publicModels.map(async ({ metadataURI }) => {
+        try {
+          const response = await fetch(metadataURI);
+          const metadata = await response.json();
+          return metadata.modelName?.toLowerCase().trim();
+        } catch (err) {
+          console.error("Failed to fetch metadata:", err);
+          return null;
+        }
+      })
+    );
+
+    return Array.from(new Set(names.filter(Boolean))) as string[];
+  } catch (err) {
+    console.error("Failed to fetch existing models:", err);
+    return [];
+  }
 };
