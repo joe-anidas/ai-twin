@@ -9,11 +9,14 @@ interface NFTsSectionProps {
 }
 
 export default function NFTsSection({ nftClones, contractAddress }: NFTsSectionProps) {
+  // Sort clones in descending order of tokenId (newest first)
+  const sortedClones = [...nftClones].sort((a, b) => Number(b.tokenId) - Number(a.tokenId));
+
   return (
     <section className={styles.nftsSection}>
       <h2>Your NFT Clones</h2>
       <div className={styles.grid}>
-        {nftClones.map((clone) => (
+        {sortedClones.map((clone) => (
           <CloneCard 
             key={clone.tokenId.toString()} 
             clone={clone}
