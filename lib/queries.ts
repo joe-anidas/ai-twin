@@ -3,7 +3,6 @@ import { gql } from '@apollo/client';
 export const GET_PUBLIC_MODELS = gql`
   query GetPublicModels {
     tokens(where: { visibility: "Public" }) {
-      id
       tokenId
       owner
       modelName
