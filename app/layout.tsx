@@ -5,8 +5,11 @@ import type { ReactNode } from "react";
 import { Providers } from "./providers";
  
 export const metadata: Metadata = {
-  title: "Smart Wallet App",
-  description: "Smart Wallet Next.js integration",
+  title: "AI Twin",
+  description: "Create your own AI twin",
+  icons: {
+    icon: "/favicon.ico"
+  }
 };
  
 export default function RootLayout(props: { children: ReactNode }) {

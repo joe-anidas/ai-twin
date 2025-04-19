@@ -28,7 +28,7 @@ export default function Navbar() {
 
   return (
     <nav style={{ padding: "10px", borderBottom: "1px solid #ccc", display: "flex", justifyContent: "space-between" }}>
-      <h2>My DApp</h2>
+      <h2>AI Twin</h2>
       
       {/* Render either the Connect button or the wallet info based on whether the user is logged in */}
       {account?.address ? (
