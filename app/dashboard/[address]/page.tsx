@@ -8,8 +8,7 @@ import CreationSection from "@/components/dashboard/CreationSection";
 import ModelsSection from "@/components/dashboard/ModelsSection";
 import NFTsSection from "@/components/dashboard/NFTsSection";
 import { useContract} from "@/context/ContractContext";
-import { CloneData } from "@/lib/queries"; // Adjust the import path as necessary
-import styles from './Dashboard.module.css';
+import { CloneData } from "@/lib/queries";
 
 export default function Dashboard() {
   const { address } = useParams();
@@ -60,6 +59,7 @@ export default function Dashboard() {
       setMintingInProgress(null);
     }
   };
+
   const handleUpload = (hash: string) => {
     setLocalModels(prev => [...prev, hash]);
   };
@@ -67,27 +67,32 @@ export default function Dashboard() {
   if (!isCorrectNetwork) return <NetworkAlert />;
 
   return (
-    <div className={styles.dashboardContainer}>
+    <div className="min-h-screen bg-gray-900">
       <Navbar />
-      <main className={styles.mainContent}>
-        <h1 className={styles.title}>AI Twin Dashboard</h1>
-        
-        <CreationSection 
-          address={address as string}
-          onUpload={handleUpload}
-        />
-        
-        <ModelsSection 
-          localModels={localModels}
-          mintingInProgress={mintingInProgress}
-          onMint={handleMint}
-        />
-        
-        <NFTsSection 
-  nftClones={nftClones}
-  contractAddress={contractAddress}
-  isLoading={mintingInProgress !== null}
-/>
+      
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-4xl font-bold text-gray-100 mb-8">
+          🪐 AI Twin Dashboard
+        </h1>
+
+        <div className="space-y-12">
+          <CreationSection 
+            address={address as string}
+            onUpload={handleUpload}
+          />
+          
+          <ModelsSection 
+            localModels={localModels}
+            mintingInProgress={mintingInProgress}
+            onMint={handleMint}
+          />
+          
+          <NFTsSection 
+            nftClones={nftClones}
+            contractAddress={contractAddress}
+            isLoading={mintingInProgress !== null}
+          />
+        </div>
       </main>
     </div>
   );
