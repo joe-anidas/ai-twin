@@ -138,9 +138,9 @@ export default function CloneCard({ clone, contractAddress }: CloneCardProps) {
             </button>
           </div>
 
-          <p className="text-center text-xs text-indigo-400/80 mt-2 font-space">
+          {/* <p className="text-center text-xs text-indigo-400/80 mt-2 font-space">
             ⚡ Powered by Base L2 Protocol
-          </p>
+          </p> */}
         </div>
       )}
     </div>

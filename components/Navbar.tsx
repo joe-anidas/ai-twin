@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useContract } from "@/context/ContractContext";
 import { useState, useEffect } from "react";
-import { SparklesIcon } from "@heroicons/react/24/solid";
+import { SparklesIcon, GlobeAltIcon } from "@heroicons/react/24/solid";
 
 export default function Navbar() {
   const { connectWallet, disconnectWallet, account } = useContract();
@@ -50,6 +50,16 @@ export default function Navbar() {
                 </span>
               </div>
               <button
+                onClick={() => router.push(`/dashboard/public/${account.address}`)}
+                className="relative overflow-hidden px-4 py-2 bg-gradient-to-r from-indigo-600/80 to-purple-500/80 hover:from-indigo-500/80 hover:to-purple-400/80 text-gray-100 rounded-lg transition-all duration-300 font-medium border border-indigo-500/50 hover:border-indigo-400/50 group flex items-center space-x-2"
+              >
+                <span className="relative z-10 flex items-center space-x-2">
+                  <GlobeAltIcon className="w-5 h-5 text-white/80" />
+                  <span>Public Models</span>
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-20 transition-opacity" />
+              </button>
+              <button
                 onClick={handleDisconnectWallet}
                 className="relative overflow-hidden px-4 py-2 bg-gradient-to-r from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-gray-300 rounded-lg transition-all duration-300 font-medium border border-gray-700/50 hover:border-gray-600/50 group"
               >
@@ -70,7 +80,7 @@ export default function Navbar() {
                     />
                   </svg>
                 </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-20 transition-opacity" />
               </button>
             </div>
           ) : (
