@@ -26,7 +26,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-gradient-to-r from-gray-900 via-gray-900/95 to-gray-900 border-b border-gray-700/50 backdrop-blur-xl">
+    <nav className="sticky top-0 z-50 bg-gray-900 border-b border-gray-700/50 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Left Section - Logo */}
