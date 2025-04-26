@@ -27,88 +27,120 @@ export async function POST(req: Request) {
     metadata = requestBody.metadata;
     const { messages } = requestBody;
 
-    // Dynamic system prompt
+    // Enhanced system prompt with completion guarantees
     const systemPrompt = `
-    # Identity Framework
-    You are ${metadata.modelName}, a ${metadata.role} specialist.
-    Core Knowledge: ${metadata.textSample}
+    # Fitness Coach Identity
+    You are ${metadata.modelName}, a professional ${metadata.role} coach.
+    Specialization: ${metadata.textSample}
 
-    # Response Guidelines
-    1. Use varied phrasings for similar questions
-    2. Maintain ${metadata.modelName} persona consistently
-    3. Example greetings:
-       - "Greetings! I'm ${metadata.modelName}..."
-       - "Hello! Your ${metadata.role} expert here..."
-       - "Hi! Let's discuss ${metadata.role}..."
+    # Response Rules
+    1. ALWAYS complete your full response before ending
+    2. When providing plans/lists, include ALL items completely
+    3. Never stop mid-sentence or leave incomplete thoughts
+    4. Match response length to question:
+       - Short (1-5 words): 1-2 sentences max
+       - Medium (6-12 words): 2-3 sentences
+       - Complex (13+ words): 3-4 sentences
+    5. For workout plans, use this format:
+       "Day X: [Workout] - [Sets]x[Reps] (e.g., Day 1: Squats - 3x10)"
 
-    # Redirect Examples
-    User: How's the weather?
-    Response: My expertise is ${metadata.role}. Let's focus on ${metadata.textSample.split(', ')[0]}!
+    # Example Complete Responses
+    User: "cheatsheet for 30 days gym plan"
+    Response: "Here's your 30-day plan:
+    Day 1-5: Full-body basics 3x8
+    Day 6-10: Push/Pull split 4x6
+    ...(complete all 30 days)"`;
 
-    User: Tell me a joke
-    Response: While humor is fun, I specialize in ${metadata.role}. Ask me about ${metadata.textSample.split(', ')[1]}!`;
+    const lastUserMessage = messages.filter(m => m.role === 'user').pop()?.content || '';
+    const questionComplexity = lastUserMessage.split(' ').length;
 
-    // Context management
-    const recentMessages = messages
-      .filter(m => m.role !== 'system')
-      .slice(-4)
-      .map(m => ({
-        role: m.role,
-        content: m.content.trim()
-      }));
+    // Dynamic token allocation
+    let maxTokens = 200;
+    if (questionComplexity <= 5) maxTokens = 150;
+    if (questionComplexity > 12) maxTokens = 300;
 
-    // Generate completion
-    const completion = await groq.chat.completions.create({
+    // Generate initial completion
+    let completion = await groq.chat.completions.create({
       messages: [
         { 
           role: 'system', 
           content: systemPrompt.replace(/\s+/g, ' ').trim() 
         },
-        ...recentMessages
+        ...messages.filter(m => m.role !== 'system').slice(-3)
       ],
       model: 'llama3-70b-8192',
-      temperature: 0.65,
+      temperature: 0.7,
       top_p: 0.9,
-      max_tokens: 130,
-      frequency_penalty: 0.6,
-      presence_penalty: 0.6
+      max_tokens: maxTokens,
+      frequency_penalty: 0.4,
+      presence_penalty: 0.4
     });
 
     let response = completion.choices[0]?.message?.content?.trim() || '';
 
-    // Validation patterns
-    const validationRegex = new RegExp(
-      `\\b(${[
-        'cannot help',
-        'don\'t know',
-        'as an ai',
-        'language model'
-      ].join('|')})\\b`, 'i'
-    );
+    // Completion validation and repair
+    if (isIncomplete(response)) {
+      const repairPrompt = `Complete this fitness response properly:\n\n"${response}"`;
+      
+      const repairCompletion = await groq.chat.completions.create({
+        messages: [{ role: 'user', content: repairPrompt }],
+        model: 'llama3-70b-8192',
+        max_tokens: 150
+      });
+      
+      response = response + ' ' + repairCompletion.choices[0]?.message?.content?.trim();
+    }
 
-    // Dynamic fallbacks
-    const fallbackResponses = [
-      `${metadata.modelName} here! Let's focus on ${metadata.role}.`,
-      `My specialty is ${metadata.role}. What specific aspect interests you?`,
-      `Let's explore ${metadata.textSample.split(', ')[0]} together!`,
-      `${metadata.role} is my expertise. Where shall we start?`
-    ];
-
+    // Final validation
+    const validationRegex = /cannot help|don'?t know|as an ai|language model/i;
     const requiresRedirect = !response || validationRegex.test(response);
+
+    // Fitness-themed fallbacks
+    const fallbackResponses = [
+      `${metadata.modelName} here! Let's focus on your ${metadata.role} goals. What specifically do you need?`,
+      `I live for ${metadata.role}! Ask me anything workout-related.`,
+      `My specialty is ${metadata.textSample.split(',')[0]}. How can I help?`
+    ];
 
     return NextResponse.json({
       response: requiresRedirect
         ? fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)]
-        : response
+        : formatResponse(response, questionComplexity)
     });
 
   } catch (error) {
-    console.error('[Chat Error]', error);
+    console.error('[Fitness Coach Error]', error);
     return NextResponse.json(
-      { 
-        error: `${metadata?.modelName || 'Our specialist'} is temporarily unavailable. Please try again.` 
-      },
+      { error: `${metadata?.modelName || 'Your coach'} is catching their breath! Try again in 30 seconds.` },
       { status: 503 }
     );
   }
+}
+
+// Helper functions
+function isIncomplete(response: string): boolean {
+  return (
+    response.endsWith(':') ||
+    response.endsWith('-') ||
+    !/[.!?]\s*$/.test(response) ||
+    (response.includes('Day') && !/\bDay \d+/.test(response.split('\n').pop() || ''))
+  );
+}
+
+function formatResponse(response: string, complexity: number): string {
+  // Ensure workout plans have complete days
+  if (response.includes('Day') && response.includes(':')) {
+    const days = response.split('\n').filter(line => line.trim().startsWith('Day'));
+    if (days.length > 0 && !days[days.length-1].includes('-')) {
+      return response.replace(days[days.length-1], '');
+    }
+  }
+  
+  // Trim only if significantly over limit
+  const sentences = response.split(/[.!?]+/).filter(s => s.trim());
+  const maxSentences = complexity <= 5 ? 2 : complexity <= 12 ? 3 : 4;
+  
+  return sentences.length > maxSentences + 1
+    ? sentences.slice(0, maxSentences).join('.') + '.'
+    : response;
 }
