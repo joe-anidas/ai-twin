@@ -22,7 +22,6 @@ export default function CreateAITwinForm({ address, onUpload, onCancel }: Props)
   const [checkingName, setCheckingName] = useState(false);
   const [nameAvailable, setNameAvailable] = useState<boolean | null>(null);
 
-  // Load existing names on mount
   useEffect(() => {
     const loadExistingNames = async () => {
       try {
@@ -35,7 +34,6 @@ export default function CreateAITwinForm({ address, onUpload, onCancel }: Props)
     loadExistingNames();
   }, []);
 
-  // Debounced name checker
   const checkNameAvailability = debounce(async (name: string) => {
     const trimmedName = name.trim().toLowerCase();
     if (!trimmedName) {
@@ -72,7 +70,6 @@ export default function CreateAITwinForm({ address, onUpload, onCancel }: Props)
   const handleSubmit = async () => {
     const trimmedName = modelName.trim();
     
-    // Basic validation
     if (!trimmedName) {
       setError("Model name is required.");
       return;
@@ -83,7 +80,6 @@ export default function CreateAITwinForm({ address, onUpload, onCancel }: Props)
       return;
     }
 
-    // Final availability check
     if (existingNames.has(trimmedName.toLowerCase())) {
       setError("Model name already exists. Please choose a different name.");
       return;
@@ -93,13 +89,11 @@ export default function CreateAITwinForm({ address, onUpload, onCancel }: Props)
       setLoading(true);
       setError(null);
 
-      // Upload file if exists
       let fileHash = "";
       if (file) {
         fileHash = await uploadFileToIPFS(file);
       }
 
-      // Create metadata
       const metadata = {
         address,
         modelName: trimmedName,
@@ -110,14 +104,11 @@ export default function CreateAITwinForm({ address, onUpload, onCancel }: Props)
         timestamp: new Date().toISOString(),
       };
 
-      // Upload metadata
       const jsonHash = await uploadJSONToIPFS(metadata);
       const ipfsUrl = `https://gateway.pinata.cloud/ipfs/${jsonHash}`;
       
-      // Update existing names
       setExistingNames(prev => new Set([...prev, trimmedName.toLowerCase()]));
       
-      // Reset form
       setModelName("");
       setText("");
       setRole("Mentor");
@@ -139,13 +130,13 @@ export default function CreateAITwinForm({ address, onUpload, onCancel }: Props)
       <h2 className="text-3xl font-bold mb-8 text-gray-100">
         🌌 Create AI Twin
       </h2>
-  
+
       {error && (
         <div className="mb-6 p-4 bg-pink-900/30 border border-pink-700/50 rounded-lg text-pink-400">
           ⚠️ {error}
         </div>
       )}
-  
+
       <div className="mb-6 relative">
         <label className="block text-sm font-medium mb-2 text-gray-300">
           Model Name
@@ -178,7 +169,7 @@ export default function CreateAITwinForm({ address, onUpload, onCancel }: Props)
           </div>
         </div>
       </div>
-  
+
       <div className="mb-6">
         <label className="block text-sm font-medium mb-2 text-gray-300">
           Training Text Samples
@@ -192,7 +183,7 @@ export default function CreateAITwinForm({ address, onUpload, onCancel }: Props)
           disabled={loading}
         />
       </div>
-  
+
       <div className="mb-6">
         <label className="block text-sm font-medium mb-2 text-gray-300">
           Upload Training Data (Optional)
@@ -226,7 +217,7 @@ export default function CreateAITwinForm({ address, onUpload, onCancel }: Props)
           </label>
         </div>
       </div>
-  
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div>
           <label className="block text-sm font-medium mb-2 text-gray-300">
@@ -238,12 +229,30 @@ export default function CreateAITwinForm({ address, onUpload, onCancel }: Props)
             className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 text-gray-100 transition-all duration-300"
             disabled={loading}
           >
-            <option value="Mentor">Mentor</option>
-            <option value="Tutor">Tutor</option>
-            <option value="Chatbot">Chatbot</option>
+            <option 
+              value="Mentor"
+              className="bg-gray-900 text-gray-100"
+              style={{ backgroundColor: '#111827', color: '#f3f4f6' }}
+            >
+              Mentor
+            </option>
+            <option 
+              value="Tutor"
+              className="bg-gray-900 text-gray-100"
+              style={{ backgroundColor: '#111827', color: '#f3f4f6' }}
+            >
+              Tutor
+            </option>
+            <option 
+              value="Chatbot"
+              className="bg-gray-900 text-gray-100"
+              style={{ backgroundColor: '#111827', color: '#f3f4f6' }}
+            >
+              Chatbot
+            </option>
           </select>
         </div>
-  
+
         <div>
           <label className="block text-sm font-medium mb-2 text-gray-300">
             Visibility
@@ -254,12 +263,24 @@ export default function CreateAITwinForm({ address, onUpload, onCancel }: Props)
             className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 text-gray-100 transition-all duration-300"
             disabled={loading}
           >
-            <option value="Public">Public</option>
-            <option value="Private">Private</option>
+            <option 
+              value="Public"
+              className="bg-gray-900 text-gray-100"
+              style={{ backgroundColor: '#111827', color: '#f3f4f6' }}
+            >
+              Public
+            </option>
+            <option 
+              value="Private"
+              className="bg-gray-900 text-gray-100"
+              style={{ backgroundColor: '#111827', color: '#f3f4f6' }}
+            >
+              Private
+            </option>
           </select>
         </div>
       </div>
-  
+
       <div className="flex justify-end gap-4">
         <button
           onClick={onCancel}
@@ -283,7 +304,7 @@ export default function CreateAITwinForm({ address, onUpload, onCancel }: Props)
           )}
         </button>
       </div>
-  
+
       <p className="text-center text-xs text-indigo-400/80 mt-6 font-space">
         ⚡ Powered by Base L2 Protocol
       </p>
