@@ -19,12 +19,14 @@ export default function Dashboard() {
     mintCloneNFT, 
     isCorrectNetwork, 
     getOwnedClones,
-    contractAddress,isDisconnecting
+    contractAddress,
+    isDisconnecting
   } = useContract();
   
   const [localModels, setLocalModels] = useState<string[]>([]);
   const [nftClones, setNftClones] = useState<CloneData[]>([]);
   const [mintingInProgress, setMintingInProgress] = useState<string | null>(null);
+  const [networkCheckComplete, setNetworkCheckComplete] = useState(false);
 
   useEffect(() => {
     if (!account?.address || account.address.toLowerCase() !== (address as string).toLowerCase()) {
@@ -42,6 +44,12 @@ export default function Dashboard() {
     
     loadClones();
   }, [account?.address, getOwnedClones]);
+
+  useEffect(() => {
+    if (isCorrectNetwork !== undefined) {
+      setNetworkCheckComplete(true);
+    }
+  }, [isCorrectNetwork]);
 
   const handleMint = async (hash: string) => {
     try {
@@ -65,12 +73,13 @@ export default function Dashboard() {
     setLocalModels(prev => [...prev, hash]);
   };
 
-  if (!isCorrectNetwork && !isDisconnecting) return <NetworkAlert />;
+  if (isDisconnecting) return <LoadingScreen />;
+  if (!networkCheckComplete) return <LoadingScreen />;
+  if (!isCorrectNetwork && account?.address) return <NetworkAlert />;
 
   return (
     <div className="min-h-full bg-gray-900">
       <Navbar />
-      {isDisconnecting && <LoadingScreen />}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-4xl font-bold text-gray-100 mb-8">
           🪐 Twin AI Dashboard

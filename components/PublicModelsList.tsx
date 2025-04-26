@@ -5,6 +5,7 @@ import { GET_PUBLIC_MODELS } from '@/lib/queries';
 import { apolloClient } from '@/lib/apollo-client';
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useContract } from "@/context/ContractContext";
 
 type ModelMetadata = {
   modelName: string;
@@ -26,13 +27,19 @@ type PublicModel = {
 
 export default function PublicModelsList() {
   const router = useRouter();
+  const { account } = useContract();
   const [sortedModels, setSortedModels] = useState<PublicModel[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  
+  const [isClient, setIsClient] = useState(false);
+
   const { loading, error, data } = useQuery(GET_PUBLIC_MODELS, {
     client: apolloClient,
     fetchPolicy: 'cache-and-network'
   });
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     const loadModels = async () => {
@@ -116,17 +123,28 @@ export default function PublicModelsList() {
             🌟 Public AI Models
           </h1>
           
-          <div className="relative max-w-2xl mx-auto">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <SearchIcon className="h-5 w-5 text-slate-400" />
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
+            <div className="relative w-full max-w-2xl">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <SearchIcon className="h-5 w-5 text-slate-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search models..."
+                className="w-full pl-10 pr-4 py-2 sm:py-3 text-sm sm:text-base bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-200 placeholder-slate-400 transition-all"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-            <input
-              type="text"
-              placeholder="Search models..."
-              className="w-full pl-10 pr-4 py-2 sm:py-3 text-sm sm:text-base bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-200 placeholder-slate-400 transition-all"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            
+            {isClient && account?.status === 'connected' && (
+              <button
+                onClick={() => account?.address && setSearchQuery(account.address)}
+                className="px-4 sm:px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-lg transition-all duration-200 whitespace-nowrap"
+              >
+                Show My Models
+              </button>
+            )}
           </div>
         </div>
 
@@ -224,7 +242,7 @@ export default function PublicModelsList() {
   );
 }
 
-// Responsive Icon components
+// Icon components remain unchanged
 function SearchIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
