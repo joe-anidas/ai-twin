@@ -118,7 +118,7 @@ export default function PublicModelsList() {
   return (
     <div className="min-h-screen bg-slate-900 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        <div className="space-y-6">
+        <div className="space-y-6"><br></br>
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4 text-center">
             🌟 Public AI Models
           </h1>

@@ -2,7 +2,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/opening/Navbar";
+import Footer from "@/components/opening/Footer";
 import NetworkAlert from "@/components/dashboard/NetworkAlert";
 import CreationSection from "@/components/dashboard/CreationSection";
 import ModelsSection from "@/components/dashboard/ModelsSection";
@@ -104,6 +105,6 @@ export default function Dashboard() {
           />
         </div>
       </main>
-    </div>
+    <Footer/> </div>
   );
 }
