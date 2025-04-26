@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { ArrowPathIcon, ArrowUpCircleIcon } from '@heroicons/react/24/solid';
+import { useContract } from "@/context/ContractContext";
 
 interface ChatMetadata {
   modelName: string;
@@ -13,6 +15,7 @@ interface ChatMetadata {
 
 export default function ChatClient() {
   const searchParams = useSearchParams();
+  const { account } = useContract();
   const [metadata, setMetadata] = useState<ChatMetadata | null>(null);
   const [inputMessage, setInputMessage] = useState('');
   const [messages, setMessages] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
@@ -108,12 +111,12 @@ export default function ChatClient() {
         <div className="max-w-2xl w-full bg-red-900/30 rounded-xl p-8 border border-red-800/50">
           <h2 className="text-2xl font-bold text-red-400 mb-4">Quantum Flux Detected</h2>
           <p className="text-red-300">{error}</p>
-          <a
-            href="/dashboard"
+          <Link
+            href={account?.address ? `/dashboard/${account.address}` : '/'}
             className="mt-6 inline-flex items-center px-6 py-3 bg-red-600/30 hover:bg-red-600/40 border border-red-700/50 rounded-lg text-red-200 transition-all duration-200"
           >
             Recalibrate Dimensions
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -141,9 +144,30 @@ export default function ChatClient() {
       <header className="border-b border-gray-700/50 bg-gradient-to-r from-gray-900 via-gray-900/80 to-gray-900">
         <div className="max-w-4xl mx-auto p-6 space-y-2">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-100 truncate">
-              {metadata.modelName}
-            </h1>
+            <div className="flex items-center gap-4">
+              <Link 
+                href={account?.address ? `/dashboard/${account.address}` : '/'}
+                className="text-gray-400 hover:text-indigo-400 transition-colors"
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className="h-6 w-6" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18" 
+                  />
+                </svg>
+              </Link>
+              <h1 className="text-2xl font-bold text-gray-100 truncate">
+                {metadata.modelName}
+              </h1>
+            </div>
             <span className="px-3 py-1 text-sm font-medium text-indigo-400 bg-indigo-900/30 rounded-full backdrop-blur-sm">
               {metadata.role}
             </span>
