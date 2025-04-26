@@ -1,15 +1,22 @@
 "use client";
 
-import Navbar from "../components/Navbar"; // Adjust the import path as necessary
+import Navbar from "../components/opening/Navbar"; // Adjust the import path as necessary
 // import { useContract } from "@/context/ContractContext";
 import PublicModelsList from "@/components/PublicModelsList";
+
+import Hero from "../components/opening/Hero";
+import Contact from "../components/opening/Contact";
+
 
 export default function Home() {
   // const { account } = useContract();
   return (
     <main>
-      <Navbar /> {/* Use the Navbar component that already has connectWallet functionality */}
+      <Navbar /> 
+      <Hero/>
       <PublicModelsList />
+      <Contact />
+
     </main>
   );
 }

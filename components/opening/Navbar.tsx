@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { useContract } from "@/context/ContractContext";
 import { useState, useEffect } from "react";
 import { SparklesIcon, GlobeAltIcon, Bars3Icon, XMarkIcon } from "@heroicons/react/24/solid";
-import { LoadingScreen } from "./LoadingScreen";
+import { LoadingScreen } from "../LoadingScreen";
 
 export default function Navbar() {
   const { connectWallet, disconnectWallet, account } = useContract();
