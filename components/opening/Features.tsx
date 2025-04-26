@@ -49,7 +49,7 @@ export default function Features() {
             Build Your <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">AI Twin</span>
           </h3>
           <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto">
-            Harness the power of Base, Groq and Fluvio to create customized AI models that learn and adapt to your specific needs.
+            Harness the power of Base and Groq to create customized AI models that learn and adapt to your specific needs.
           </p>
         </div>
 

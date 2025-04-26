@@ -47,7 +47,7 @@ export default function AiTwinHero() {
             <div className="relative z-10 px-4 sm:px-6 md:px-8 lg:pl-12">
               <div className="inline-flex items-center px-4 py-2 bg-blue-500/20 border border-blue-500/30 rounded-full mb-4 md:mb-6">
                 <span className="text-sm font-medium text-blue-400">
-                  Powered by Base, Groq & Fluvio
+                  Powered by Base & Groq
                 </span>
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 md:mb-6 leading-tight">
