@@ -29,7 +29,7 @@ export default function Features() {
   ];
 
   return (
-    <section className="py-16 md:py-24 relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <section className="py-12 sm:py-16 md:py-20 lg:py-24 relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Animated gradient background */}
       <div className="absolute inset-0 overflow-hidden opacity-20">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-purple-500/10 animate-pulse"></div>
@@ -38,39 +38,39 @@ export default function Features() {
       {/* Subtle grid pattern */}
       <div className="absolute inset-0 opacity-10 [background-image:linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] [background-size:24px_24px]" />
       
-      <div className="container mx-auto px-4 md:px-6 relative z-10">
-        <div className="mb-12 text-center">
-          <div className="inline-flex items-center px-4 py-2 bg-blue-500/20 border border-blue-500/30 rounded-full mb-4">
-            <span className="text-sm font-medium text-blue-400">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="mb-8 sm:mb-10 md:mb-12 text-center">
+          <div className="inline-flex items-center px-3 py-1 sm:px-4 sm:py-2 bg-blue-500/20 border border-blue-500/30 rounded-full mb-3 sm:mb-4">
+            <span className="text-xs sm:text-sm font-medium text-blue-400">
               Features & Benefits
             </span>
           </div>
-          <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3 sm:mb-4">
             Build Your <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">AI Twin</span>
           </h3>
-          <p className="text-slate-300 max-w-2xl mx-auto">
+          <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto">
             Harness the power of Base, Groq and Fluvio to create customized AI models that learn and adapt to your specific needs.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
           {features.map((feature, index) => (
             <div
               key={index}
-              className={`${feature.bgColor} border ${feature.borderColor} rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-2 shadow-xl backdrop-blur-sm`}
+              className={`${feature.bgColor} border ${feature.borderColor} rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 sm:hover:-translate-y-2 shadow-md sm:shadow-xl backdrop-blur-sm`}
             >
-              <div className="p-8 h-full">
+              <div className="p-5 sm:p-6 md:p-7 lg:p-8 h-full">
                 <div className="flex flex-col h-full">
-                  <div className="mb-6 bg-gradient-to-r from-blue-600 to-purple-600 w-12 h-12 rounded-lg flex items-center justify-center">
-                    <feature.icon className={`h-6 w-6 ${feature.textColor}`} />
+                  <div className="mb-4 sm:mb-5 md:mb-6 bg-gradient-to-r from-blue-600 to-purple-600 w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center">
+                    <feature.icon className={`h-5 w-5 sm:h-6 sm:w-6 ${feature.textColor}`} />
                   </div>
-                  <h3 className={`text-xl font-bold mb-3 ${feature.textColor}`}>
+                  <h3 className={`text-lg sm:text-xl font-bold mb-2 sm:mb-3 ${feature.textColor}`}>
                     {feature.title}
                   </h3>
-                  <p className={`${feature.textColor} opacity-80 mb-6 flex-grow text-sm md:text-base`}>
+                  <p className={`${feature.textColor} opacity-80 mb-4 sm:mb-5 md:mb-6 flex-grow text-xs sm:text-sm md:text-base`}>
                     {feature.description}
                   </p>
-                  <div className="w-16 h-1 bg-gradient-to-r from-blue-400 to-purple-600 rounded-full"></div>
+                  <div className="w-12 sm:w-16 h-1 bg-gradient-to-r from-blue-400 to-purple-600 rounded-full"></div>
                 </div>
               </div>
             </div>
