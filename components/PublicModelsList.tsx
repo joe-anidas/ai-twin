@@ -100,8 +100,8 @@ export default function PublicModelsList() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-500 text-lg">
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <p className="text-red-500 text-lg text-center">
           Error loading models: {error.message}
         </p>
       </div>
@@ -109,10 +109,10 @@ export default function PublicModelsList() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 p-6">
-      <div className="max-w-7xl mx-auto space-y-10">
+    <div className="min-h-screen bg-slate-900 p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
         <div className="space-y-6">
-          <h1 className="text-4xl font-bold text-white mb-4 text-center">
+          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4 text-center">
             🌟 Public AI Models
           </h1>
           
@@ -122,8 +122,8 @@ export default function PublicModelsList() {
             </div>
             <input
               type="text"
-              placeholder="Search models by name or owner address..."
-              className="w-full pl-10 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-200 placeholder-slate-400 transition-all"
+              placeholder="Search models..."
+              className="w-full pl-10 pr-4 py-2 sm:py-3 text-sm sm:text-base bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-200 placeholder-slate-400 transition-all"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -140,26 +140,26 @@ export default function PublicModelsList() {
             {filteredModels.map((model) => (
               <div 
                 key={model.tokenId}
-                className="bg-slate-800/50 hover:bg-slate-800/70 rounded-xl p-6 transition-all duration-300 group flex flex-row items-center justify-between"
+                className="bg-slate-800/50 hover:bg-slate-800/70 rounded-xl p-4 sm:p-6 transition-all duration-300 group flex flex-col sm:flex-row items-start sm:items-center justify-between"
               >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-4 mb-2">
-                    <h2 className="text-xl font-semibold text-white truncate">
+                <div className="flex-1 min-w-0 w-full sm:w-auto">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2">
+                    <h2 className="text-lg sm:text-xl font-semibold text-white truncate">
                       {model.metadata.modelName}
                     </h2>
-                    <span className="px-2 py-1 text-xs font-medium text-blue-300 bg-blue-900/30 rounded-full">
+                    <span className="px-2 py-1 text-xs font-medium text-blue-300 bg-blue-900/30 rounded-full self-start sm:self-center">
                       {model.metadata.role}
                     </span>
                   </div>
                   
-                  <div className="flex items-center space-x-6 text-sm text-slate-300">
-                    <div className="flex items-center space-x-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 text-sm text-slate-300">
+                    <div className="flex items-center gap-2">
                       <UserIcon className="h-4 w-4 text-slate-400" />
-                      <span className="font-mono">
+                      <span className="font-mono break-all sm:break-normal">
                         {model.owner.slice(0, 6)}...{model.owner.slice(-4)}
                       </span>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center gap-2">
                       <CalendarIcon className="h-4 w-4 text-slate-400" />
                       <span>
                         {model.timestamp.toLocaleDateString('en-US', {
@@ -170,27 +170,27 @@ export default function PublicModelsList() {
                       </span>
                     </div>
                     {model.metadata.version && (
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-2">
                         <CodeIcon className="h-4 w-4 text-slate-400" />
-                        <span>Version {model.metadata.version}</span>
+                        <span>v{model.metadata.version}</span>
                       </div>
                     )}
                   </div>
 
                   {model.metadata.description && (
-                    <p className="mt-2 text-slate-400 text-sm truncate">
+                    <p className="mt-2 text-slate-400 text-sm line-clamp-2">
                       {model.metadata.description}
                     </p>
                   )}
                 </div>
 
-                <div className="ml-4 flex-shrink-0">
+                <div className="mt-4 sm:mt-0 sm:ml-4 w-full sm:w-auto">
                   <button
                     onClick={() => handleChatNavigation(model)}
-                    className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-lg transition-all duration-200 flex items-center justify-center"
+                    className="w-full sm:w-auto px-4 sm:px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
                   >
                     <span>Chat</span>
-                    <ArrowRightIcon className="h-4 w-4 ml-2" />
+                    <ArrowRightIcon className="h-4 w-4" />
                   </button>
                 </div>
               </div>
@@ -199,8 +199,8 @@ export default function PublicModelsList() {
         )}
 
         {!loading && filteredModels.length === 0 && (
-          <div className="text-center py-16 space-y-4">
-            <p className="text-xl text-slate-400">
+          <div className="text-center py-8 sm:py-16 space-y-4">
+            <p className="text-lg sm:text-xl text-slate-400 px-4">
               {searchQuery ? 
                 "🔍 No models matching your search..." : 
                 "🎯 No public models available. Create one to get started!"
@@ -209,7 +209,7 @@ export default function PublicModelsList() {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="text-blue-400 hover:text-blue-300 transition-colors"
+                className="text-blue-400 hover:text-blue-300 transition-colors text-sm sm:text-base"
               >
                 Clear search
               </button>
@@ -221,7 +221,7 @@ export default function PublicModelsList() {
   );
 }
 
-// Icon components
+// Responsive Icon components
 function SearchIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
