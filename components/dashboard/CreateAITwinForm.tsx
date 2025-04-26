@@ -230,6 +230,27 @@ export default function CreateAITwinForm({ address, onUpload, onCancel }: Props)
             disabled={loading}
           >
             <option 
+              value="Friendly Assistant"
+              className="bg-gray-900 text-gray-100"
+              style={{ backgroundColor: '#111827', color: '#f3f4f6' }}
+            >
+              Friendly Assistant
+            </option>
+            <option 
+              value="Fitness Coach"
+              className="bg-gray-900 text-gray-100"
+              style={{ backgroundColor: '#111827', color: '#f3f4f6' }}
+            >
+              Fitness Coach
+            </option>
+            <option 
+              value="Chatbot"
+              className="bg-gray-900 text-gray-100"
+              style={{ backgroundColor: '#111827', color: '#f3f4f6' }}
+            >
+              Chatbot
+            </option>
+            <option 
               value="Mentor"
               className="bg-gray-900 text-gray-100"
               style={{ backgroundColor: '#111827', color: '#f3f4f6' }}
@@ -242,13 +263,6 @@ export default function CreateAITwinForm({ address, onUpload, onCancel }: Props)
               style={{ backgroundColor: '#111827', color: '#f3f4f6' }}
             >
               Tutor
-            </option>
-            <option 
-              value="Chatbot"
-              className="bg-gray-900 text-gray-100"
-              style={{ backgroundColor: '#111827', color: '#f3f4f6' }}
-            >
-              Chatbot
             </option>
           </select>
         </div>
