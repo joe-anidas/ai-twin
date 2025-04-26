@@ -133,7 +133,7 @@ export default function ChatClient() {
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col">
-      {/* Groq Certification Badge - Hidden on mobile */}
+      {/* Groq Certification Badge */}
       <div className="hidden sm:fixed sm:bottom-4 sm:right-4 z-50 sm:flex items-center space-x-2 bg-gradient-to-r from-green-500 to-blue-600 px-4 py-2 rounded-full shadow-lg backdrop-blur-sm border border-white/10 hover:shadow-xl transition-all">
         <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
           <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
@@ -141,7 +141,8 @@ export default function ChatClient() {
         <span className="text-white font-medium text-sm">Speed Certified by Groq</span>
       </div>
 
-      <header className="border-b border-gray-700/50 bg-gradient-to-r from-gray-900 via-gray-900/80 to-gray-900">
+      {/* Fixed Header */}
+      <header className="fixed top-0 left-0 right-0 z-10 border-b border-gray-700/50 bg-gradient-to-r from-gray-900 via-gray-900/80 to-gray-900">
         <div className="max-w-4xl mx-auto p-6 space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -184,6 +185,10 @@ export default function ChatClient() {
         </div>
       </header>
 
+      {/* Spacer for fixed header */}
+      <div className="h-36" /> {/* Adjust this value based on your header height */}
+
+      {/* Chat Messages Area */}
       <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-gray-700/50 scrollbar-track-gray-900">
         <div className="max-w-4xl mx-auto space-y-8">
           {messages.map((msg, i) => (
@@ -212,6 +217,7 @@ export default function ChatClient() {
         </div>
       </div>
 
+      {/* Input Form */}
       <form
         onSubmit={handleSubmit}
         className="border-t border-gray-700/50 bg-gray-900/50 backdrop-blur-sm p-6"

@@ -162,10 +162,13 @@ export default function PublicModelsList() {
                     <div className="flex items-center gap-2">
                       <CalendarIcon className="h-4 w-4 text-slate-400" />
                       <span>
-                        {model.timestamp.toLocaleDateString('en-US', {
+                        {model.timestamp.toLocaleString('en-US', {
                           year: 'numeric',
                           month: 'short',
-                          day: 'numeric'
+                          day: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true
                         })}
                       </span>
                     </div>
