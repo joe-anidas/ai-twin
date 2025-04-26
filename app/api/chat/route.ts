@@ -20,55 +20,95 @@ interface ChatRequest {
 }
 
 export async function POST(req: Request) {
-  try {
-    const { messages, metadata } = (await req.json()) as ChatRequest;
-    
-    const systemPrompt = `You are ${metadata.modelName}, a specialized AI clone. 
-    Role: ${metadata.role}.
-    Knowledge: ${metadata.textSample}.
-    
-    Strict Rules:
-    1. Only discuss ${metadata.role} topics
-    2. Never mention being an AI model
-    3. Respond in 1-2 sentences
-    4. Redirect off-topic questions to your specialty
-    5. Example response to "hi": "Hello! I'm ${metadata.modelName}, ${metadata.role}. How can I assist you?"`;
+  let metadata: ChatRequest['metadata'] | undefined;
 
+  try {
+    const requestBody = await req.json() as ChatRequest;
+    metadata = requestBody.metadata;
+    const { messages } = requestBody;
+
+    // Dynamic system prompt
+    const systemPrompt = `
+    # Identity Framework
+    You are ${metadata.modelName}, a ${metadata.role} specialist.
+    Core Knowledge: ${metadata.textSample}
+
+    # Response Guidelines
+    1. Use varied phrasings for similar questions
+    2. Maintain ${metadata.modelName} persona consistently
+    3. Example greetings:
+       - "Greetings! I'm ${metadata.modelName}..."
+       - "Hello! Your ${metadata.role} expert here..."
+       - "Hi! Let's discuss ${metadata.role}..."
+
+    # Redirect Examples
+    User: How's the weather?
+    Response: My expertise is ${metadata.role}. Let's focus on ${metadata.textSample.split(', ')[0]}!
+
+    User: Tell me a joke
+    Response: While humor is fun, I specialize in ${metadata.role}. Ask me about ${metadata.textSample.split(', ')[1]}!`;
+
+    // Context management
+    const recentMessages = messages
+      .filter(m => m.role !== 'system')
+      .slice(-4)
+      .map(m => ({
+        role: m.role,
+        content: m.content.trim()
+      }));
+
+    // Generate completion
     const completion = await groq.chat.completions.create({
       messages: [
-        { role: 'system', content: systemPrompt },
-        ...messages.filter(m => m.role !== 'system')
+        { 
+          role: 'system', 
+          content: systemPrompt.replace(/\s+/g, ' ').trim() 
+        },
+        ...recentMessages
       ],
       model: 'llama3-70b-8192',
-      temperature: 0.3,
-      max_tokens: 100,
-      frequency_penalty: 0.7,
-      presence_penalty: 0.7
+      temperature: 0.65,
+      top_p: 0.9,
+      max_tokens: 130,
+      frequency_penalty: 0.6,
+      presence_penalty: 0.6
     });
 
-    let response = completion.choices[0]?.message?.content || '';
-    
-    // Enforce response rules
-    const forbiddenPhrases = [
-      'customer experience', 
-      'how can I help',
-      'what would you like to discuss'
-    ];
-    
-    const isInvalid = forbiddenPhrases.some(phrase => 
-      response.toLowerCase().includes(phrase)
+    let response = completion.choices[0]?.message?.content?.trim() || '';
+
+    // Validation patterns
+    const validationRegex = new RegExp(
+      `\\b(${[
+        'cannot help',
+        'don\'t know',
+        'as an ai',
+        'language model'
+      ].join('|')})\\b`, 'i'
     );
 
+    // Dynamic fallbacks
+    const fallbackResponses = [
+      `${metadata.modelName} here! Let's focus on ${metadata.role}.`,
+      `My specialty is ${metadata.role}. What specific aspect interests you?`,
+      `Let's explore ${metadata.textSample.split(', ')[0]} together!`,
+      `${metadata.role} is my expertise. Where shall we start?`
+    ];
+
+    const requiresRedirect = !response || validationRegex.test(response);
+
     return NextResponse.json({
-      response: isInvalid ? 
-        `I specialize in ${metadata.role}. How can I assist you with that?` : 
-        response
+      response: requiresRedirect
+        ? fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)]
+        : response
     });
 
   } catch (error) {
+    console.error('[Chat Error]', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { 
+        error: `${metadata?.modelName || 'Our specialist'} is temporarily unavailable. Please try again.` 
+      },
+      { status: 503 }
     );
   }
 }
