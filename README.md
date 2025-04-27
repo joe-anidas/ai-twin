@@ -3,16 +3,16 @@
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Active-success)](https://ai-twin-xi.vercel.app) 
 [![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-blue)](https://github.com/jayasurya0007/ai-twin)  
-
+---
 📌 **Problem Statement**  
 Problem Statement 1 - Weave AI magic with Groq  
-
+---
 🎯 **Objective**  
 Empower users to create, own, and monetize personalized AI agents while solving:  
 - Limited access to customized AI in rural/digital-divide areas  
 - No true ownership of digital AI assets  
 - High barriers to AI personalization  
-
+---
 🧠 **Team & Approach**  
 **Team Name**: HEARTILEY BATTERY  
 
@@ -24,7 +24,7 @@ Empower users to create, own, and monetize personalized AI agents while solving:
 1. Leveraged Base + Groq for maximum accessibility  
 2. Solved key challenge: Gasless onboarding for non-crypto users  
 3. Breakthrough: IPFS + NFT hybrid storage for AI training data  
-
+---
 🛠️ **Tech Stack**  
 **Core Technologies**:  
 | Layer       | Technologies |  
@@ -38,26 +38,28 @@ Empower users to create, own, and monetize personalized AI agents while solving:
 **Sponsor Technologies**:  
 - ✅ **Groq**: Powers <100ms AI responses  
 - ✅ **Base**: Gasless NFT minting + Smart Wallets  
-
+---
 ✨ **Key Features**  
 ✅ Create AI Twins with custom personalities  
 ✅ Gasless NFT minting on Base  
 ✅ IPFS-stored training data  
 ✅ Sub-100ms chat via Groq LPUs  
-
+---
 📽️ **Demo & Deliverables**  
 - [Demo Video](https://youtu.be/6ZBjPpvBpcc)  
 - [Pitch Deck](https://docs.google.com/presentation/d/1Rw9Q3sl9WJ6vlwUq2TOAlXxrsLfn8BqyE2FYeGyJ3Iw/)  
-
+---
 ✅ **Tasks & Bonus Checklist**  
 - ✅ All team members completed mandatory social tasks  
 - ✅ Bonus Task 1: Shared badges  
 - ✅ Bonus Task 2: Sprint.dev signups  
-
+---
 🧪 **How to Run**  
 **Requirements**:  
 - Node.js v18+  
 - Base Sepolia testnet ETH  
+
+---
 
 # Local Setup:
       git clone https://github.com/jayasurya0007/ai-twin.git
@@ -83,22 +85,25 @@ Create .env.local with:
 
 # Start Development Server
       npx next dev
+---
+## **🧬 Future Scope**  
 
-🧬 Future Scope
+**Multi-chain NFT support**  
+**AI training marketplace**  
+**Local language models for offline use**  
 
-      Multi-chain NFT support
-      
-      AI training marketplace
-      
-      Local language models for offline use
+---
 
-📎 Resources
+## **📎 Resources**  
 
-      Base Smart Wallet SDK
-      
-      Groq Cloud API
-      
-      The Graph for querying
+**Base Smart Wallet SDK**  
+**Groq Cloud API**  
+**The Graph for querying**  
 
-#🏁 Final Words
-         Special thanks to Base & Groq for enabling this project! Built with ❤️ by HEARTILEY BATTERY.
+---
+
+## **🏁 Final Words**  
+**Special thanks to Base & Groq for enabling this project!**  
+**Built with ❤️ by HEARTILEY BATTERY.** 
+
+---
