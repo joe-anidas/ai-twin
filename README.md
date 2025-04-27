@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Twin AI  
+### Ownable, Personalized AI Agents on Blockchain  
 
-## Getting Started
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Active-success)](https://ai-twin-xi.vercel.app) 
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-blue)](https://github.com/jayasurya0007/ai-twin)  
 
-First, run the development server:
+## Key Features  
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### AI Creation Engine  
+- **Customizable Personalities**: Define role types (assistant, coach, etc.)  
+- **Flexible Training**: Provide text samples or upload documents  
+- **Privacy Controls**: Choose public or private visibility  
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Blockchain Integration  
+- **Gasless NFT Minting**: Claim ownership via Base Smart Wallet  
+- **On-Chain Provenance**: Immutable records on Base Sepolia  
+- **Decentralized Storage**: Training data persisted on IPFS  
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### High-Performance Chat  
+- **Sub-100ms Responses**: Powered by Groq's LPU inference engine  
+- **Role-Based Interactions**: Consistent personality maintenance  
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Technology Stack  
 
-## Learn More
+**Core Components**  
+| Layer          | Technologies |  
+|----------------|--------------|  
+| **Blockchain** | Base Sepolia, Hardhat, Alchemy RPC |  
+| **Web3**       | Wagmi, Privy.io (Smart Wallets) |  
+| **Frontend**   | Next.js 14, Tailwind CSS |  
+| **AI**         | Groq API (Llama3-70B) |  
+| **Storage**    | IPFS via NFT.Storage |  
 
-To learn more about Next.js, take a look at the following resources:
+## Getting Started  
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Clone Repository**  
+   ```bash  
+   git clone https://github.com/jayasurya0007/ai-twin.git
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+2. **Install Dependencies**
+   ```bash  
+   npm install
+3. **🔒 Environment Configuration**
+  Create a `.env.local` file with these variables:
+   ```env
+    # Blockchain Configuration
+    NEXT_PUBLIC_CONTRACT_ADDRESS=0x70d771BdC85CA17d1cB25BefA58ba35694DeB86B
+    NEXT_PUBLIC_ALCHEMY_BASE_SEPOLIA_URL=https://base-sepolia.g.alchemy.com/v2/YOUR_API_KEY
+    PRIVATE_KEY=YOUR_DEPLOYER_PRIVATE_KEY
+    
+    # IPFS Storage (Pinata)
+    NEXT_PUBLIC_PINATA_API_KEY=your_pinata_api_key
+    NEXT_PUBLIC_PINATA_SECRET_KEY=your_pinata_secret_key
+    
+    # AI Configuration
+    GROQ_API_KEY=your_groq_api_key
+    
+    # Subgraph
+    NEXT_PUBLIC_SUBGRAPH_URL=https://api.studio.thegraph.com/query/YOUR_SUBGRAPH_ID
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4. **Run Development Server**
+    ```bash
+    npx next dev  
