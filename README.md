@@ -26,10 +26,10 @@
 | Layer          | Technologies |  
 |----------------|--------------|  
 | **Blockchain** | Base Sepolia, Hardhat, Alchemy RPC |  
-| **Web3**       | Wagmi, Privy.io (Smart Wallets) |  
+| **Web3**       | Wagmi(Base Smart Wallets) |  
 | **Frontend**   | Next.js 14, Tailwind CSS |  
 | **AI**         | Groq API (Llama3-70B) |  
-| **Storage**    | IPFS via NFT.Storage |  
+| **Storage**    | IPFS via NFT.Storage(Pinata) |  
 
 ## Getting Started  
 
